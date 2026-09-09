@@ -135,17 +135,17 @@
 
                 <div>
                     <label class="text-[10px] font-bold text-gray-400 uppercase" data-i18n="nameLabel">Tên của bạn (*)</label>
-                    <input type="text" id="ob-name" class="w-full mt-1 bg-gray-50 border border-gray-200 text-sm rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-pink-500">
+                    <input type="text" id="ob-name" name="maimai-ob-name" autocomplete="off" autocapitalize="words" class="w-full mt-1 bg-gray-50 border border-gray-200 text-sm rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-pink-500">
                 </div>
 
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="text-[10px] font-bold text-gray-400 uppercase" data-i18n="ageLabel">Tuổi</label>
-                        <input type="number" id="ob-age" class="w-full mt-1 bg-gray-50 border border-gray-200 text-sm rounded-xl px-3 py-2.5 focus:outline-none" placeholder="" inputmode="numeric">
+                        <input type="number" id="ob-age" name="maimai-ob-age" autocomplete="off" class="w-full mt-1 bg-gray-50 border border-gray-200 text-sm rounded-xl px-3 py-2.5 focus:outline-none" placeholder="" inputmode="numeric">
                     </div>
                     <div>
                         <label class="text-[10px] font-bold text-gray-400 uppercase" data-i18n="genderLabel">Giới tính</label>
-                        <select id="ob-sex" class="w-full mt-1 bg-gray-50 border border-gray-200 text-sm rounded-xl px-3 py-2.5 focus:outline-none">
+                        <select id="ob-sex" name="maimai-ob-sex" autocomplete="off" class="w-full mt-1 bg-gray-50 border border-gray-200 text-sm rounded-xl px-3 py-2.5 focus:outline-none">
                             <option value="" data-i18n="genderSelectPlaceholder">Chọn giới tính</option>
                             <option value="female" data-i18n="genderFemale">Nữ</option>
                             <option value="male" data-i18n="genderMale">Nam</option>
@@ -156,22 +156,22 @@
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="text-[10px] font-bold text-gray-400 uppercase" data-i18n="heightLabel">Chiều cao (cm) (*)</label>
-                        <input type="number" id="ob-height" class="w-full mt-1 bg-gray-50 border border-gray-200 text-sm rounded-xl px-3 py-2.5 focus:outline-none">
+                        <input type="number" id="ob-height" name="maimai-ob-height" autocomplete="off" class="w-full mt-1 bg-gray-50 border border-gray-200 text-sm rounded-xl px-3 py-2.5 focus:outline-none">
                     </div>
                     <div>
                         <label class="text-[10px] font-bold text-gray-400 uppercase" data-i18n="weightLabel">Cân nặng (kg) (*)</label>
-                        <input type="number" step="0.1" id="ob-current-weight" class="w-full mt-1 bg-gray-50 border border-gray-200 text-sm rounded-xl px-3 py-2.5 focus:outline-none">
+                        <input type="number" step="0.1" id="ob-current-weight" name="maimai-ob-weight" autocomplete="off" class="w-full mt-1 bg-gray-50 border border-gray-200 text-sm rounded-xl px-3 py-2.5 focus:outline-none">
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="text-[10px] font-bold text-gray-400 uppercase" data-i18n="targetWeightLabel">Mục tiêu (kg)</label>
-                        <input type="number" step="0.1" id="ob-target-weight" class="w-full mt-1 bg-gray-50 border border-gray-200 text-sm rounded-xl px-3 py-2.5 focus:outline-none">
+                        <input type="number" step="0.1" id="ob-target-weight" name="maimai-ob-target" autocomplete="off" class="w-full mt-1 bg-gray-50 border border-gray-200 text-sm rounded-xl px-3 py-2.5 focus:outline-none">
                     </div>
                     <div>
                         <label class="text-[10px] font-bold text-gray-400 uppercase" data-i18n="goalTypeLabel">Mục tiêu cân nặng</label>
-                        <select id="ob-goal-type" class="w-full mt-1 bg-gray-50 border border-gray-200 text-xs rounded-xl px-2 py-3 focus:outline-none">
+                        <select id="ob-goal-type" name="maimai-ob-goal" autocomplete="off" class="w-full mt-1 bg-gray-50 border border-gray-200 text-xs rounded-xl px-2 py-3 focus:outline-none">
                             <option value="" data-i18n="goalSelectPlaceholder">Chọn mục tiêu</option>
                             <option value="LOSE" data-i18n="goalLose">Giảm cân</option>
                             <option value="MAINTAIN" data-i18n="goalMaintain">Duy trì</option>
@@ -182,7 +182,7 @@
 
                 <div>
                     <label class="text-[10px] font-bold text-gray-400 uppercase" data-i18n="activityLabel">Vận động</label>
-                    <select id="ob-activity" class="w-full mt-1 bg-gray-50 border border-gray-200 text-xs rounded-xl px-2 py-3 focus:outline-none">
+                    <select id="ob-activity" name="maimai-ob-activity" autocomplete="off" class="w-full mt-1 bg-gray-50 border border-gray-200 text-xs rounded-xl px-2 py-3 focus:outline-none">
                         <option value="" data-i18n="activitySelectPlaceholder">Chọn mức vận động</option>
                         <option value="1.2" data-i18n="act1">Ít vận động</option>
                         <option value="1.375" data-i18n="act2">Nhẹ nhàng</option>
@@ -1510,14 +1510,17 @@
             const tw = Number(p.targetWeight);
             const cw = Number(p.currentWeight);
             const act = Number(p.activityLevel);
-            const demoName = !name || name === DEMO_PROFILE_NAME;
+            // Exact legacy seed name is always treated as demo (even if isSetup was true).
+            if (name === DEMO_PROFILE_NAME) return true;
+            const demoName = !name;
             const demoBody =
                 age === 25 &&
                 height === 160 &&
                 (tw === 55 || tw === 60) &&
                 (cw === 60 || cw === 61 || isNaN(cw)) &&
                 (act === 1.375 || isNaN(act)) &&
-                (p.sex === 'female' || !p.sex);
+                (p.sex === 'female' || !p.sex) &&
+                (!p.goalType || p.goalType === 'LOSE');
             return demoName && demoBody;
         }
 
@@ -1564,6 +1567,27 @@
             if (!data.profile) data.profile = createUnsetProfile('vi', 'sweet');
             if (!Array.isArray(data.periodRecords)) data.periodRecords = [];
             const p = data.profile;
+
+            // Wipe legacy demo seed even when isSetup was incorrectly left true.
+            if (looksLikeDemoProfile(p)) {
+                const wiped = createEmptyAppData(p.lang || 'vi');
+                wiped.profile.persona = p.persona || 'sweet';
+                wiped.profile.lang = p.lang || 'vi';
+                wiped.favorites = Array.isArray(data.favorites) ? data.favorites : [];
+                wiped.myFoods = Array.isArray(data.myFoods) ? data.myFoods : [];
+                // Keep non-seed daily/period history if user actually logged something;
+                // drop obvious single-seed weight logs (60/61 kg).
+                const onlySeed =
+                    !data.weightLogs ||
+                    data.weightLogs.length === 0 ||
+                    (data.weightLogs.length === 1 &&
+                        (Number(data.weightLogs[0].weight) === 60 || Number(data.weightLogs[0].weight) === 61));
+                wiped.weightLogs = onlySeed ? [] : (Array.isArray(data.weightLogs) ? data.weightLogs : []);
+                wiped.dailyRecords = data.dailyRecords || {};
+                wiped.periodRecords = Array.isArray(data.periodRecords) ? data.periodRecords : [];
+                return wiped;
+            }
+
             if (p.isSetup === true) {
                 if (!data.schemaVersion || data.schemaVersion < 3) data.schemaVersion = 3;
                 if (!Array.isArray(data.weightLogs)) data.weightLogs = [];
@@ -3307,9 +3331,19 @@
         }
 
         function openOnboardingModal() {
-            // Phase 1: first / unset user → empty form. Saved user → load their profile only (no demo fallbacks).
-            if (!isProfileSetup(appData.profile)) clearOnboardingForm();
-            else fillOnboardingFormFromSavedProfile();
+            // First / unset / legacy-demo → always empty form.
+            // Real saved user → load their profile only (never demo fallbacks).
+            if (!isProfileSetup(appData.profile) || looksLikeDemoProfile(appData.profile)) {
+                if (looksLikeDemoProfile(appData.profile)) {
+                    const lang = (appData.profile && appData.profile.lang) || 'vi';
+                    const persona = (appData.profile && appData.profile.persona) || 'sweet';
+                    appData.profile = createUnsetProfile(lang, persona);
+                    saveState();
+                }
+                clearOnboardingForm();
+            } else {
+                fillOnboardingFormFromSavedProfile();
+            }
             document.getElementById('onboarding-modal').classList.remove('hidden');
         }
 
