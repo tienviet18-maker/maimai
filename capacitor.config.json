@@ -1,0 +1,25 @@
+{
+  "appId": "com.vimai.maimai",
+  "appName": "Maimai",
+  "webDir": "www",
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#fdf2f8",
+    "webContentsDebuggingEnabled": false,
+    "adjustMarginsForEdgeToEdge": "auto"
+  },
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "AdMob": {
+      "appIdAndroid": "ca-app-pub-6588196119148846~8757683722",
+      "initializeForTesting": false
+    },
+    "StatusBar": {
+      "overlaysWebView": false,
+      "style": "LIGHT",
+      "backgroundColor": "#fdf2f8"
+    }
+  }
+}

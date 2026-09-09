@@ -1,0 +1,9 @@
+# MaiMai web deploy — publish Capacitor www bundle
+[build]
+  publish = "www"
+
+# SPA fallback (hash routes / deep links)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

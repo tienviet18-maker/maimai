@@ -1,0 +1,23 @@
+{
+  "name": "maimai-android",
+  "version": "1.0.0",
+  "description": "Capacitor Android wrapper for frozen MaiMai V1 SPA",
+  "private": true,
+  "scripts": {
+    "patch:www": "node tools/patch_www_bridge.js",
+    "sync": "npx cap sync android",
+    "open:android": "npx cap open android",
+    "build:android:debug": "cd android && .\\gradlew.bat assembleDebug",
+    "build:android:release": "cd android && .\\gradlew.bat bundleRelease"
+  },
+  "dependencies": {
+    "@capacitor-community/admob": "^7.0.3",
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/app": "^7.1.0",
+    "@capacitor/core": "^7.4.3",
+    "@capacitor/status-bar": "^7.0.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.4.3"
+  }
+}

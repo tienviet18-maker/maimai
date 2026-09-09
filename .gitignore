@@ -3,9 +3,32 @@ dist/
 build/
 .DS_Store
 
-# Backups generated during patches
+# Android / Capacitor build artifacts
+android/.gradle/
+android/app/build/
+android/build/
+android/capacitor-cordova-android-plugins/build/
+.idea/
+*.iml
+.jdk/
+*.keystore
+*.jks
+key.properties
+signing-credentials.local.txt
+android/key.properties
+android/signing-credentials.local.txt
+android/maimai-upload.jks
+local.properties
+
+# Supabase local secrets (use Netlify env in production)
+www/js/supabase/config.local.js
+
+# Local backups / debug captures
+backups/
 *.bak*
 index.html.bak_*
-index.html.bak_pre_patch
-index.html.bak_oneshot
+*.png
+*.xml
 
+# Legacy patch artifacts
+_oneshot_patch.js
