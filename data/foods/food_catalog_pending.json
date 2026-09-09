@@ -1,0 +1,238 @@
+[
+  {
+    "id": "pending_vn_001",
+    "status": "pending_source",
+    "nameVi": "Phở gà",
+    "nameEn": "Chicken pho",
+    "nameJa": "フォー・ガー",
+    "reason": "No exact verified FNDDS/MEXT row for chicken pho (only Soup, pho, with meat)"
+  },
+  {
+    "id": "pending_vn_002",
+    "status": "pending_source",
+    "nameVi": "Bún bò Huế",
+    "nameEn": "Bun bo Hue",
+    "nameJa": "ブン・ボー",
+    "reason": "No verified nutrition source in MEXT/USDA downloads"
+  },
+  {
+    "id": "pending_vn_003",
+    "status": "pending_source",
+    "nameVi": "Bún chả",
+    "nameEn": "Bun cha",
+    "nameJa": "ブンチャー",
+    "reason": "No verified nutrition source found"
+  },
+  {
+    "id": "pending_vn_004",
+    "status": "pending_source",
+    "nameVi": "Bún riêu",
+    "nameEn": "Bun rieu",
+    "reason": "No verified nutrition source found"
+  },
+  {
+    "id": "pending_vn_005",
+    "status": "pending_source",
+    "nameVi": "Bún thịt nướng",
+    "nameEn": "Vermicelli with grilled pork",
+    "reason": "No verified nutrition source found"
+  },
+  {
+    "id": "pending_vn_006",
+    "status": "pending_source",
+    "nameVi": "Hủ tiếu",
+    "nameEn": "Hu tieu noodle soup",
+    "reason": "No verified nutrition source found"
+  },
+  {
+    "id": "pending_vn_007",
+    "status": "pending_source",
+    "nameVi": "Mì Quảng",
+    "nameEn": "Mi Quang",
+    "reason": "No verified nutrition source found"
+  },
+  {
+    "id": "pending_vn_008",
+    "status": "pending_source",
+    "nameVi": "Cao lầu",
+    "nameEn": "Cao lau",
+    "reason": "No verified nutrition source found"
+  },
+  {
+    "id": "pending_vn_009",
+    "status": "pending_source",
+    "nameVi": "Bánh canh",
+    "nameEn": "Banh canh",
+    "reason": "No verified nutrition source found"
+  },
+  {
+    "id": "pending_vn_010",
+    "status": "pending_source",
+    "nameVi": "Bánh mì thịt",
+    "nameEn": "Vietnamese baguette sandwich with meat",
+    "nameJa": "バインミー",
+    "reason": "No verified USDA/FNDDS sandwich row matching bánh mì thịt"
+  },
+  {
+    "id": "pending_vn_011",
+    "status": "pending_source",
+    "nameVi": "Bánh mì trứng",
+    "nameEn": "Vietnamese egg baguette",
+    "reason": "No verified nutrition source found"
+  },
+  {
+    "id": "pending_vn_012",
+    "status": "pending_source",
+    "nameVi": "Gỏi cuốn",
+    "nameEn": "Fresh spring roll (goi cuon)",
+    "nameJa": "生春巻き",
+    "reason": "USDA has fried egg rolls; fresh goi cuon not in downloaded verified sets"
+  },
+  {
+    "id": "pending_vn_013",
+    "status": "pending_source",
+    "nameVi": "Bánh xèo",
+    "nameEn": "Vietnamese savory crepe",
+    "reason": "No verified nutrition source found"
+  },
+  {
+    "id": "pending_vn_014",
+    "status": "pending_source",
+    "nameVi": "Bánh cuốn",
+    "nameEn": "Steamed rice rolls",
+    "reason": "No verified nutrition source found"
+  },
+  {
+    "id": "pending_vn_015",
+    "status": "pending_source",
+    "nameVi": "Bánh bèo",
+    "nameEn": "Banh beo",
+    "reason": "No verified nutrition source found"
+  },
+  {
+    "id": "pending_vn_016",
+    "status": "pending_source",
+    "nameVi": "Bánh khọt",
+    "nameEn": "Banh khot",
+    "reason": "No verified nutrition source found"
+  },
+  {
+    "id": "pending_vn_017",
+    "status": "pending_source",
+    "nameVi": "Bánh ít",
+    "nameEn": "Banh it",
+    "reason": "No verified nutrition source found"
+  },
+  {
+    "id": "pending_vn_018",
+    "status": "pending_source",
+    "nameVi": "Bánh tét",
+    "nameEn": "Banh tet",
+    "reason": "No verified nutrition source found"
+  },
+  {
+    "id": "pending_vn_019",
+    "status": "pending_source",
+    "nameVi": "Bánh chưng",
+    "nameEn": "Banh chung",
+    "reason": "No verified nutrition source found"
+  },
+  {
+    "id": "pending_vn_020",
+    "status": "pending_source",
+    "nameVi": "Cơm tấm",
+    "nameEn": "Broken rice plate",
+    "reason": "No verified nutrition source found"
+  },
+  {
+    "id": "pending_vn_021",
+    "status": "pending_source",
+    "nameVi": "Cháo gà",
+    "nameEn": "Chicken congee",
+    "reason": "Generic congee exists; chicken cháo not verified as separate row"
+  },
+  {
+    "id": "pending_vn_022",
+    "status": "pending_source",
+    "nameVi": "Cháo lòng",
+    "nameEn": "Offal congee",
+    "reason": "No verified nutrition source found"
+  },
+  {
+    "id": "pending_vn_023",
+    "status": "pending_source",
+    "nameVi": "Thịt kho trứng",
+    "nameEn": "Caramelized pork and egg",
+    "reason": "No verified nutrition source found"
+  },
+  {
+    "id": "pending_vn_024",
+    "status": "pending_source",
+    "nameVi": "Thịt heo quay",
+    "nameEn": "Roast pork (VN style)",
+    "reason": "No verified VN-style roast pork row"
+  },
+  {
+    "id": "pending_vn_025",
+    "status": "pending_source",
+    "nameVi": "Bò kho",
+    "nameEn": "Vietnamese beef stew",
+    "reason": "No verified nutrition source found"
+  },
+  {
+    "id": "pending_vn_026",
+    "status": "pending_source",
+    "nameVi": "Bò lúc lắc",
+    "nameEn": "Shaking beef",
+    "reason": "No verified nutrition source found"
+  },
+  {
+    "id": "pending_vn_027",
+    "status": "pending_source",
+    "nameVi": "Cá kho tộ",
+    "nameEn": "Clay-pot caramelized fish",
+    "reason": "No verified nutrition source found"
+  },
+  {
+    "id": "pending_vn_028",
+    "status": "pending_source",
+    "nameVi": "Rau muống",
+    "nameEn": "Water spinach / morning glory",
+    "reason": "Not found as named item in downloaded USDA/MEXT sets"
+  },
+  {
+    "id": "pending_vn_029",
+    "status": "pending_source",
+    "nameVi": "Mồng tơi",
+    "nameEn": "Malabar spinach",
+    "reason": "No verified nutrition source found"
+  },
+  {
+    "id": "pending_vn_030",
+    "status": "pending_source",
+    "nameVi": "Rau dền",
+    "nameEn": "Amaranth greens",
+    "reason": "No verified nutrition source found"
+  },
+  {
+    "id": "pending_vn_031",
+    "status": "pending_source",
+    "nameVi": "Cà phê sữa đá",
+    "nameEn": "Vietnamese iced milk coffee",
+    "reason": "No verified nutrition source found"
+  },
+  {
+    "id": "pending_vn_032",
+    "status": "pending_source",
+    "nameVi": "Nước mía",
+    "nameEn": "Sugarcane juice",
+    "reason": "No verified nutrition source found"
+  },
+  {
+    "id": "pending_vn_033",
+    "status": "pending_source",
+    "nameVi": "Mắm tôm",
+    "nameEn": "Shrimp paste (mam tom)",
+    "reason": "No verified nutrition source found"
+  }
+]

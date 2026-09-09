@@ -1,0 +1,11 @@
+node_modules/
+dist/
+build/
+.DS_Store
+
+# Backups generated during patches
+*.bak*
+index.html.bak_*
+index.html.bak_pre_patch
+index.html.bak_oneshot
+

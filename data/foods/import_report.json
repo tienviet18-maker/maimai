@@ -1,0 +1,29 @@
+{
+  "generatedAt": "2026-08-28T14:38:37.596Z",
+  "totalVerified": 10441,
+  "japanese": 2584,
+  "vietnamese": 156,
+  "international": 7701,
+  "mext": 2538,
+  "usdaSrLegacy": 7793,
+  "usdaFndds": 110,
+  "otherVerified": 0,
+  "vietnameseVerified": 156,
+  "vietnamesePending": 33,
+  "foodsWithCalories": 10441,
+  "foodsWithProtein": 10418,
+  "foodsWithFat": 10363,
+  "foodsWithCarbs": 10361,
+  "duplicatesRemoved": 0,
+  "invalidRemoved": 0,
+  "sources": [
+    "日本食品標準成分表（八訂）増補2023年 — https://www.mext.go.jp/a_menu/syokuhinseibun/mext_00001.html",
+    "USDA FoodData Central SR Legacy — https://fdc.nal.usda.gov/download-datasets/",
+    "USDA FoodData Central FNDDS Survey — https://fdc.nal.usda.gov/download-datasets/"
+  ],
+  "notes": [
+    "Vietnamese Food Composition Table 2017 (FAO) is print-only; not digitally importable here.",
+    "Vietnamese verified foods come from USDA FNDDS/SR rows that match Vietnamese dishes/ingredients.",
+    "Multilingual nameVi/nameJa/aliases are search labels only; nutrition always from source."
+  ]
+}
