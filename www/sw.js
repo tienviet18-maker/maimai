@@ -3,7 +3,11 @@ var CACHE = 'maimai-shell-v1';
 var PRECACHE = [
   './',
   './index.html',
-  './manifest.webmanifest'
+  './manifest.webmanifest',
+  './icons/apple-touch-icon.png',
+  './icons/apple-touch-icon-180.png',
+  './icons/icon-192.png',
+  './icons/icon-512.png'
 ];
 
 self.addEventListener('install', function (event) {

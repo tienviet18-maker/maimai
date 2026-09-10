@@ -29,6 +29,8 @@ backups/
 index.html.bak_*
 *.png
 *.xml
+!www/icons/
+!www/icons/**/*.png
 
 # Legacy patch artifacts
 _oneshot_patch.js
