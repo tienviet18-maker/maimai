@@ -193,6 +193,50 @@ create policy "cycle_logs_delete_own"
   using (auth.uid() = user_id);
 
 -- ---------------------------------------------------------------------------
+-- 5) notification_prefs + notification_logs (optional cloud audit; privacy-safe)
+-- ---------------------------------------------------------------------------
+create table if not exists public.notification_prefs (
+  user_id uuid primary key references public.users (id) on delete cascade,
+  enabled boolean not null default false,
+  quiet_hours_start time,
+  quiet_hours_end time,
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.notification_logs (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.users (id) on delete cascade,
+  slot_id text,
+  tone text,
+  context_mode text,
+  title text,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists notification_logs_user_created_idx
+  on public.notification_logs (user_id, created_at desc);
+
+alter table public.notification_prefs enable row level security;
+alter table public.notification_logs enable row level security;
+
+drop policy if exists "notification_prefs_select_own" on public.notification_prefs;
+create policy "notification_prefs_select_own"
+  on public.notification_prefs for select using (auth.uid() = user_id);
+drop policy if exists "notification_prefs_upsert_own" on public.notification_prefs;
+create policy "notification_prefs_insert_own"
+  on public.notification_prefs for insert with check (auth.uid() = user_id);
+drop policy if exists "notification_prefs_update_own" on public.notification_prefs;
+create policy "notification_prefs_update_own"
+  on public.notification_prefs for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists "notification_logs_select_own" on public.notification_logs;
+create policy "notification_logs_select_own"
+  on public.notification_logs for select using (auth.uid() = user_id);
+drop policy if exists "notification_logs_insert_own" on public.notification_logs;
+create policy "notification_logs_insert_own"
+  on public.notification_logs for insert with check (auth.uid() = user_id);
+
+-- ---------------------------------------------------------------------------
 -- Schema alignment (safe re-run): ensure daily_metrics columns match the app
 -- App payload columns: user_id, date, weight, water_ml, sleep_hours
 -- create table if not exists does NOT add missing columns on older tables.

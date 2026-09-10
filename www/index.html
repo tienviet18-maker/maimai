@@ -12,6 +12,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="MaiMai">
     <meta name="theme-color" content="#ec4899">
+    <link rel="manifest" href="manifest.webmanifest">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -22,6 +23,7 @@
     <script src="js/cycle/cycle_engine.js"></script>
     <script src="js/food/food_repository.js"></script>
     <script src="js/nutrition/nutrition_bridge.js"></script>
+    <script src="js/notifications/notificationEngine.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8/dist/umd/supabase.js"></script>
     <script src="js/supabase/config.local.js"></script>
     <script src="js/supabase/supabaseClient.js"></script>
@@ -206,6 +208,20 @@
                         <div onclick="selectPersona('buddy')" id="persona-buddy" class="persona-card p-2 rounded-xl border-2 border-gray-100 cursor-pointer">
                             <p class="font-bold text-xs text-gray-800" data-i18n="personaBuddyName">✨ Bạn thân Năng Động</p>
                         </div>
+                    </div>
+                </div>
+
+                <div class="mt-3 p-3 rounded-xl border border-pink-100 bg-pink-50/60">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                            <p class="text-[10px] font-bold text-pink-500 uppercase" data-i18n="notifTitle">Thông báo thông minh</p>
+                            <p class="text-[11px] text-gray-500 leading-relaxed mt-0.5" data-i18n="notifHint">Nhắc uống nước / ngủ theo ngữ cảnh chu kỳ — giọng ấm khi bạn đang khó chịu.</p>
+                            <p id="ob-notif-status" class="text-[10px] text-gray-400 mt-1"></p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
+                            <input type="checkbox" id="ob-notifications-enabled" class="sr-only peer" onchange="onNotificationToggleChange(this.checked)">
+                            <div class="w-10 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:bg-pink-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
+                        </label>
                     </div>
                 </div>
             </div>
@@ -875,6 +891,7 @@
                 coachOver: "Hôm nay Bạn đã vượt mục tiêu khoảng {over} kcal. Ngày mai quay lại nhịp ổn định nhé 💗",
                 macroTargetLine: "Gợi ý macro: P {p}g · F {f}g · C {c}g",
                 personaTitle: "Phong cách đồng hành:", saveBtn: "Lưu & Bắt đầu ✨", greeting: "Chào ngày mới,", currentWeightText: "Cân nặng hiện tại", todaySummary: "Tổng quan hôm nay", caloEaten: "Calo tiêu thụ", protein: "Đạm (Protein)", fat: "Chất béo", carb: "Tinh bột (Carb)",
+                notifTitle: "Thông báo thông minh", notifHint: "Nhắc uống nước / ngủ theo ngữ cảnh chu kỳ — giọng ấm khi bạn đang khó chịu.", notifOn: "Đã bật thông báo", notifOff: "Đã tắt", notifDenied: "Quyền thông báo bị từ chối", notifIosHome: "Trên iPhone: thêm MaiMai vào Màn hình chính rồi bật lại.", notifUnsupported: "Trình duyệt này chưa hỗ trợ thông báo.",
                 fiber: "Chất xơ", sodium: "Muối/Na", goodStatus: "Đạt chuẩn", water: "Nước đã uống", sleep: "Giấc ngủ", dietMenuTitle: "Thực đơn dinh dưỡng", remaining: "Còn lại", eaten: "Đã nạp", subTabSearch: "🔍 Tìm món", subTabCustom: "➕ Tự nhập món", subTabMyFoods: "❤️ Món của tôi", favRecent: "⭐ Yêu thích & Gần đây:",
                 gramsLabel: "Khối lượng (gram)", mealSelectLabel: "Chọn Bữa ăn", mealBreakfast: "🌅 Sáng", mealLunch: "☀️ Trưa", mealDinner: "🌙 Tối", mealSnack: "🍵 Phụ", autoCalc: "Tự tính", addToDiaryBtn: "+ Thêm vào nhật ký hôm nay ✨", createFoodTitle: "✍️ Tạo món ăn thủ công", foodNameLabel: "Tên món (*)",
                 defaultGramsLabel: "Mặc định (g)", caloPer100Label: "Calories / 100g (*)", proteinPer100Label: "Protein / 100g", saveToMyFoodsBtn: "❤️ Lưu My Foods", saveAndAddTodayBtn: "❤️ Lưu & Thêm ngay", dailyLogsTitle: "Nhật ký các bữa ăn", updateWeightTitle: "Cập nhật cân nặng", todayText: "Hôm nay", periodTitle: "Lịch Chu Kỳ", periodSub: "Chạm vào ngày để đánh dấu", legendPeriod: "Ngày dâu", legendPredict: "Dự đoán", legendToday: "Hôm nay",
@@ -1016,6 +1033,7 @@
                 coachOver: "今日は目標を約{over}kcal超えました。明日はいつものリズムに戻しましょう 💗",
                 macroTargetLine: "マクロ目安: P {p}g · F {f}g · C {c}g",
                 personaTitle: "パートナーのスタイル:", saveBtn: "保存してスタート ✨", greeting: "おはようございます、", currentWeightText: "現在の体重", todaySummary: "本日の概要", caloEaten: "摂取カロリー", protein: "タンパク質 (P)", fat: "脂質 (F)", carb: "炭水化物 (C)",
+                notifTitle: "スマート通知", notifHint: "水分・睡眠・周期に合わせてやさしくリマインドします。", notifOn: "通知オン", notifOff: "通知オフ", notifDenied: "通知が拒否されました", notifIosHome: "iPhoneではホーム画面に追加してから再度オンにしてください。", notifUnsupported: "このブラウザは通知に未対応です。",
                 fiber: "食物繊維", sodium: "食塩相当量", goodStatus: "適正", water: "水分摂取量", sleep: "睡眠時間", dietMenuTitle: "食事・栄養ログ", remaining: "残り", eaten: "摂取済み", subTabSearch: "🔍 食品検索", subTabCustom: "➕ カスタム登録", subTabMyFoods: "❤️ マイフード", favRecent: "⭐ お気に入り & 最近:", gramsLabel: "分量 (g)", mealSelectLabel: "食事区分",
                 mealBreakfast: "🌅 朝食", mealLunch: "☀️ 昼食", mealDinner: "🌙 夕食", mealSnack: "🍵 間食", autoCalc: "自動計算", addToDiaryBtn: "+ 今日の記録に追加 ✨", createFoodTitle: "✍️ オリジナル食品の登録", foodNameLabel: "食品名 (*)", defaultGramsLabel: "デフォルト分量 (g)", caloPer100Label: "カロリー / 100g (*)", proteinPer100Label: "タンパク質 / 100g",
                 saveToMyFoodsBtn: "❤️ マイフードに保存", saveAndAddTodayBtn: "❤️ 保存して今日に追加", dailyLogsTitle: "本日の食事記録", updateWeightTitle: "体重を記録", todayText: "今日", periodTitle: "生理周期管理", periodSub: "日付をタップして記録", legendPeriod: "生理日", legendPredict: "予測日", legendToday: "今日",
@@ -1157,6 +1175,7 @@
                 coachOver: "You're about {over} kcal over today's target. Ease back into your usual rhythm tomorrow 💗",
                 macroTargetLine: "Macro guide: P {p}g · F {f}g · C {c}g",
                 personaTitle: "Choose Companion:", saveBtn: "Save & Get Started ✨", greeting: "Good day,", currentWeightText: "Current Weight", todaySummary: "Today's Summary", caloEaten: "Calories Intake", protein: "Protein", fat: "Fat", carb: "Carbs",
+                notifTitle: "Smart notifications", notifHint: "Hydration & sleep reminders that soften during sensitive cycle days.", notifOn: "Notifications on", notifOff: "Notifications off", notifDenied: "Notification permission denied", notifIosHome: "On iPhone: Add MaiMai to Home Screen, then enable again.", notifUnsupported: "Notifications are not supported in this browser.",
                 fiber: "Fiber", sodium: "Sodium", goodStatus: "Optimal", water: "Water Intake", sleep: "Sleep", dietMenuTitle: "Nutrition & Meals", remaining: "Remaining", eaten: "Consumed", subTabSearch: "🔍 Search Food", subTabCustom: "➕ Custom Food", subTabMyFoods: "❤️ My Foods", favRecent: "⭐ Favorites & Recents:", gramsLabel: "Portion (g)", mealSelectLabel: "Select Meal",
                 mealBreakfast: "🌅 Breakfast", mealLunch: "☀️ Lunch", mealDinner: "🌙 Dinner", mealSnack: "🍵 Snack", autoCalc: "Auto-calculated", addToDiaryBtn: "+ Add to Today's Log ✨", createFoodTitle: "✍️ Add Custom Food", foodNameLabel: "Food Name (*)", defaultGramsLabel: "Default Grams (g)", caloPer100Label: "Calories / 100g (*)", proteinPer100Label: "Protein / 100g",
                 saveToMyFoodsBtn: "❤️ Save to My Foods", saveAndAddTodayBtn: "❤️ Save & Add", dailyLogsTitle: "Today's Meal Diary", updateWeightTitle: "Log Weight", todayText: "Today", periodTitle: "Cycle Tracker", periodSub: "Tap date to log period", legendPeriod: "Period", legendPredict: "Predicted", legendToday: "Today",
@@ -1482,6 +1501,7 @@
                 targetCalo: null,
                 persona: persona || 'sweet',
                 lang: lang || 'vi',
+                notificationsEnabled: false,
                 isSetup: false
             };
         }
@@ -1752,6 +1772,7 @@
 
         function saveState() {
             localStorage.setItem('maimai_app_store_v2', JSON.stringify(appData));
+            try { window.appData = appData; } catch (e) { /* ignore */ }
         }
 
         /** Background Supabase sync (no-op if unconfigured / offline). Never throws to UI. */
@@ -3272,7 +3293,8 @@
                 userName: name, age, sex, height: h, currentWeight: cw, targetWeight,
                 activityLevel, goalType,
                 desiredRateKgPerWeek: goalType === 'GAIN' ? 0.25 : goalType === 'LOSE' ? 0.35 : 0,
-                persona: tempSelectedPersona, lang: currentLang, isSetup: true
+                persona: tempSelectedPersona, lang: currentLang, isSetup: true,
+                notificationsEnabled: !!(document.getElementById('ob-notifications-enabled') && document.getElementById('ob-notifications-enabled').checked)
             };
             const plan = eng ? eng.computeEnergyPlan(draft) : { ok: false };
             if (!plan.ok) {
@@ -3300,6 +3322,55 @@
             // Do NOT rely on previous/next date buttons.
             setLanguage(currentLang);
             updateDietAndHealthDisplay();
+            try {
+                if (window.MaiMaiNotificationEngine) {
+                    MaiMaiNotificationEngine.setEnabled(!!appData.profile.notificationsEnabled).then(function (res) {
+                        updateNotificationStatusLabel(res);
+                    }).catch(function () { /* silent */ });
+                }
+            } catch (e) { /* silent */ }
+        }
+
+        function updateNotificationStatusLabel(res) {
+            const el = document.getElementById('ob-notif-status');
+            if (!el) return;
+            const t = I18N[currentLang] || I18N.vi;
+            if (!res) {
+                el.innerText = '';
+                return;
+            }
+            if (res.reason === 'ios_not_standalone') el.innerText = t.notifIosHome || '';
+            else if (res.reason === 'unsupported') el.innerText = t.notifUnsupported || '';
+            else if (res.permission === 'denied' || res.reason === 'denied') el.innerText = t.notifDenied || '';
+            else if (res.ok || res.enabled) el.innerText = t.notifOn || '';
+            else el.innerText = t.notifOff || '';
+        }
+
+        async function onNotificationToggleChange(checked) {
+            const t = I18N[currentLang] || I18N.vi;
+            if (!window.MaiMaiNotificationEngine) {
+                updateNotificationStatusLabel({ reason: 'unsupported' });
+                const box = document.getElementById('ob-notifications-enabled');
+                if (box) box.checked = false;
+                return;
+            }
+            try {
+                const res = await MaiMaiNotificationEngine.setEnabled(!!checked);
+                if (appData && appData.profile) {
+                    appData.profile.notificationsEnabled = !!(res && res.ok && (res.enabled !== false) && checked);
+                    if (!checked) appData.profile.notificationsEnabled = false;
+                    if (res && res.ok === false && checked) {
+                        const box = document.getElementById('ob-notifications-enabled');
+                        if (box) box.checked = false;
+                        appData.profile.notificationsEnabled = false;
+                    }
+                    saveState();
+                }
+                updateNotificationStatusLabel(checked ? res : { ok: true, enabled: false });
+                if (res && res.reason === 'ios_not_standalone') alert(t.notifIosHome);
+            } catch (e) {
+                updateNotificationStatusLabel({ reason: 'unsupported' });
+            }
         }
 
         function clearOnboardingForm() {
@@ -3313,6 +3384,9 @@
             const goalEl = document.getElementById('ob-goal-type');
             if (goalEl) goalEl.value = '';
             selectPersona(tempSelectedPersona || 'sweet');
+            const notif = document.getElementById('ob-notifications-enabled');
+            if (notif) notif.checked = false;
+            updateNotificationStatusLabel({ ok: true, enabled: false });
         }
 
         function fillOnboardingFormFromSavedProfile() {
@@ -3328,6 +3402,16 @@
             const goalEl = document.getElementById('ob-goal-type');
             if (goalEl) goalEl.value = p.goalType || '';
             selectPersona(p.persona || 'sweet');
+            const notif = document.getElementById('ob-notifications-enabled');
+            if (notif) {
+                const prefOn = window.MaiMaiNotificationEngine && MaiMaiNotificationEngine.getPref
+                    ? !!MaiMaiNotificationEngine.getPref().enabled
+                    : false;
+                notif.checked = !!(p.notificationsEnabled || prefOn);
+            }
+            if (window.MaiMaiNotificationEngine && MaiMaiNotificationEngine.syncToggleUi) {
+                MaiMaiNotificationEngine.syncToggleUi();
+            }
         }
 
         function openOnboardingModal() {
@@ -3368,6 +3452,7 @@
         }
 
         window.onload = () => {
+            try { window.appData = appData; window.saveState = saveState; } catch (e0) { /* ignore */ }
             if (!appData.profile.isSetup) openOnboardingModal(); else setLanguage(currentLang);
             try {
                 if (window.MaiMaiSupabaseSync && typeof MaiMaiSupabaseSync.init === 'function') {
@@ -3379,6 +3464,23 @@
                 }
             } catch (e) {
                 console.warn('[MaiMai] Supabase init outer exception', e && e.message ? e.message : e);
+            }
+            try {
+                if (window.MaiMaiNotificationEngine && typeof MaiMaiNotificationEngine.init === 'function') {
+                    MaiMaiNotificationEngine.init({
+                        getAppData: function () { return appData; },
+                        getTodayStr: function () { return TODAY_STR; },
+                        getCycleDeps: function () { return typeof getCycleDateDeps === 'function' ? getCycleDateDeps() : null; },
+                        getLang: function () { return currentLang || 'vi'; }
+                    }).then(function (res) {
+                        if (window.MaiMaiNotificationEngine.syncToggleUi) MaiMaiNotificationEngine.syncToggleUi();
+                        if (res && !res.ok) console.warn('[MaiMai] Notification init issue', res);
+                    }).catch(function (err) {
+                        console.warn('[MaiMai] Notification init exception', err && err.message ? err.message : err);
+                    });
+                }
+            } catch (eNotif) {
+                console.warn('[MaiMai] Notification init outer exception', eNotif && eNotif.message ? eNotif.message : eNotif);
             }
             try {
                 window.addEventListener('online', function () {
