@@ -1,7 +1,7 @@
 # Cloudflare Pages — MaiMai (static SPA from www/)
 name = "maimai"
 compatibility_date = "2026-03-01"
-pages_build_output_dir = "dist"
+pages_build_output_dir = "www"
 
 [vars]
 # Non-secret defaults (override in Cloudflare Dashboard → Settings → Environment variables)
