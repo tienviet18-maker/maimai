@@ -4,10 +4,15 @@
   "description": "Calo, cycle care & gentle companion by ViMai",
   "start_url": "./index.html",
   "scope": "./",
+  "id": "/",
   "display": "standalone",
   "background_color": "#fdf2f8",
   "theme_color": "#ec4899",
   "lang": "vi",
+  "dir": "ltr",
+  "categories": ["health", "lifestyle"],
+  "related_applications": [],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "icons/icon-192.png",

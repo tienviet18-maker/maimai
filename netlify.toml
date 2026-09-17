@@ -1,8 +1,9 @@
-# MaiMai web deploy — publish Capacitor www bundle
+# Legacy Netlify config (migrated to Cloudflare Pages).
+# Prefer: npm run build → publish dist/ via wrangler.toml
 [build]
-  publish = "www"
+  command = "npm run build"
+  publish = "dist"
 
-# SPA fallback (hash routes / deep links)
 [[redirects]]
   from = "/*"
   to = "/index.html"

@@ -16,6 +16,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="MaiMai">
     <meta name="theme-color" content="#ec4899">
+    <link rel="canonical" href="https://maimai.vimai.jp/">
     <link rel="manifest" href="manifest.webmanifest">
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -93,6 +94,35 @@
             --maimai-inset-bottom: env(safe-area-inset-bottom, 0px);
             --maimai-banner-h: 0px;
             --maimai-chrome-bg: #fdf2f8;
+        }
+        /* Hide web ecosystem chrome inside native Capacitor shell */
+        html.maimai-capacitor .vimai-ecosystem-bar,
+        html.maimai-capacitor .vimai-ecosystem-footer {
+            display: none !important;
+        }
+        .vimai-ecosystem-bar {
+            background: #0f172a;
+            color: #e2e8f0;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .vimai-ecosystem-bar a { color: inherit; text-decoration: none; }
+        .vimai-ecosystem-bar a:hover { color: #fda4af; }
+        .vimai-ecosystem-footer {
+            background: #ffffff;
+            border-top: 1px solid #f1f5f9;
+            text-align: center;
+            padding: 1.25rem 1rem 5.5rem;
+        }
+        .vimai-ecosystem-footer .legal-main {
+            font-size: 11px;
+            font-weight: 700;
+            color: #334155;
+            letter-spacing: 0.01em;
+        }
+        .vimai-ecosystem-footer .legal-sub {
+            font-size: 10px;
+            color: #64748b;
+            margin-top: 0.25rem;
         }
         body.maimai-capacitor {
             padding-top: var(--maimai-inset-top);
@@ -241,7 +271,8 @@
                 <button type="button" onclick="contactViMaiSupport()" class="w-full py-2.5 bg-white border border-pink-200 text-pink-600 font-bold rounded-xl text-xs active:scale-95 transition" data-i18n="contactBtn">
                     Liên hệ hỗ trợ
                 </button>
-                <p class="text-[9px] text-gray-400 text-center pt-1" id="about-copyright">© 2026 ViMai · MaiMai · All rights reserved.</p>
+                <p class="text-[9px] text-gray-500 text-center pt-1 font-semibold" id="about-copyright">© 2026 ViMai Ecosystem. All rights reserved.</p>
+                <p class="text-[9px] text-gray-400 text-center" data-i18n="ecosystemLegalSub">Hệ sinh thái Giáo dục & Công nghệ ViMai</p>
             </div>
 
             <button onclick="saveOnboardingProfile()" class="w-full mt-4 bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 rounded-2xl shadow-md active:scale-95 transition text-sm" data-i18n="saveBtn">
@@ -315,6 +346,21 @@
     </div>
 
     <!-- MAIN APP CONTAINER -->
+    <div class="vimai-ecosystem-bar px-3 py-2">
+        <div class="w-full max-w-md mx-auto flex items-center justify-between gap-2 text-[11px] font-semibold">
+            <a href="https://vimai.jp" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 min-w-0">
+                <span class="inline-flex h-5 w-5 items-center justify-center rounded-md bg-rose-500 text-[10px] text-white font-bold">V</span>
+                <span class="truncate" data-i18n="ecosystemPortal">ViMai Ecosystem</span>
+            </a>
+            <nav class="flex items-center gap-2.5 shrink-0 text-[10px] font-bold text-slate-300">
+                <a href="https://vimai.jp" target="_blank" rel="noopener noreferrer" data-i18n="ecosystemHome">Portal</a>
+                <span class="opacity-30">|</span>
+                <a href="https://maimai.vimai.jp/" class="text-rose-300" aria-current="page">MaiMai</a>
+                <span class="opacity-30">|</span>
+                <a href="https://vimai.jp/#ecosystem" target="_blank" rel="noopener noreferrer" data-i18n="ecosystemApps">Apps</a>
+            </nav>
+        </div>
+    </div>
     <div class="w-full max-w-md bg-white h-full shadow-2xl relative flex flex-col mx-auto">
         <div class="flex-1 overflow-y-auto pb-24">
             
@@ -839,11 +885,20 @@
                         <p class="text-xs font-bold text-gray-700" id="author-brand-title">MaiMai</p>
                         <p class="text-[10px] text-gray-400 italic mt-0.5" id="author-tagline-text">Made with ❤️</p>
                         <p class="text-[10px] text-gray-400 mt-1" data-i18n="developedBy">Phát triển bởi ViMai</p>
-                        <p class="text-[9px] text-gray-400 mt-1" id="coach-copyright">© 2026 ViMai · MaiMai · All rights reserved.</p>
+                        <p class="text-[9px] text-gray-500 mt-1 font-semibold" id="coach-copyright">© 2026 ViMai Ecosystem. All rights reserved.</p>
+                        <p class="text-[9px] text-gray-400 mt-0.5" data-i18n="ecosystemLegalSub">Hệ sinh thái Giáo dục & Công nghệ ViMai</p>
                         <button type="button" onclick="contactViMaiSupport()" class="mt-2 text-[10px] font-bold text-pink-500 underline" data-i18n="contactBtn">Liên hệ hỗ trợ</button>
                     </div>
                 </div>
             </div>
+
+            <footer class="vimai-ecosystem-footer px-5">
+                <p class="legal-main">© 2026 ViMai Ecosystem. All rights reserved.</p>
+                <p class="legal-sub" data-i18n="ecosystemLegalSub">Hệ sinh thái Giáo dục & Công nghệ ViMai</p>
+                <p class="mt-2">
+                    <a href="https://vimai.jp" target="_blank" rel="noopener noreferrer" class="text-[10px] font-bold text-rose-500 underline" data-i18n="ecosystemPortalLink">vimai.jp</a>
+                </p>
+            </footer>
         </div>
 
         <!-- BOTTOM NAV -->
@@ -862,12 +917,15 @@
             appName: "MaiMai",
             developerName: "ViMai",
             supportEmail: "vimai.support@gmail.com",
-            version: "1.0.0",
+            version: "1.1.0",
             copyrightYear: 2026,
+            canonicalUrl: "https://maimai.vimai.jp/",
+            portalUrl: "https://vimai.jp",
+            ecosystemName: "ViMai Ecosystem",
             taglines: {
-                vi: "Một sản phẩm nhỏ được tạo nên bằng sự yêu thương. 💗",
-                ja: "愛を込めて作った小さなアプリです。💗",
-                en: "A little product made with love. 💗"
+                vi: "Một sản phẩm trong Hệ sinh thái Giáo dục & Công nghệ ViMai.",
+                ja: "ViMaiエコシステムのヘルスケアアプリです。",
+                en: "A product in the ViMai Education & Technology Ecosystem."
             }
         };
 
@@ -1007,8 +1065,13 @@
                 aboutTitle: "Về MaiMai",
                 supportLabel: "Hỗ trợ",
                 versionLabel: "Phiên bản",
-                copyrightLine: "© {year} ViMai · MaiMai · All rights reserved.",
+                copyrightLine: "© {year} ViMai Ecosystem. All rights reserved.",
                 developedBy: "Phát triển bởi ViMai",
+                ecosystemLegalSub: "Hệ sinh thái Giáo dục & Công nghệ ViMai",
+                ecosystemPortal: "ViMai Ecosystem",
+                ecosystemHome: "Portal",
+                ecosystemApps: "Apps",
+                ecosystemPortalLink: "vimai.jp",
                 contactTitle: "Liên hệ hỗ trợ",
                 contactBtn: "Liên hệ hỗ trợ",
                 contactSubject: "[MaiMai] Phản hồi từ người dùng",
@@ -1149,8 +1212,13 @@
                 aboutTitle: "MaiMaiについて",
                 supportLabel: "サポート",
                 versionLabel: "バージョン",
-                copyrightLine: "© {year} ViMai · MaiMai · All rights reserved.",
+                copyrightLine: "© {year} ViMai Ecosystem. All rights reserved.",
                 developedBy: "ViMai が開発",
+                ecosystemLegalSub: "教育・テクノロジーのエコシステム ViMai",
+                ecosystemPortal: "ViMai Ecosystem",
+                ecosystemHome: "Portal",
+                ecosystemApps: "Apps",
+                ecosystemPortalLink: "vimai.jp",
                 contactTitle: "サポートに連絡",
                 contactBtn: "サポートに連絡",
                 contactSubject: "[MaiMai] Feedback from user",
@@ -1291,8 +1359,13 @@
                 aboutTitle: "About MaiMai",
                 supportLabel: "Support",
                 versionLabel: "Version",
-                copyrightLine: "© {year} ViMai · MaiMai · All rights reserved.",
+                copyrightLine: "© {year} ViMai Ecosystem. All rights reserved.",
                 developedBy: "Developed by ViMai",
+                ecosystemLegalSub: "ViMai Education & Technology Ecosystem",
+                ecosystemPortal: "ViMai Ecosystem",
+                ecosystemHome: "Portal",
+                ecosystemApps: "Apps",
+                ecosystemPortalLink: "vimai.jp",
                 contactTitle: "Contact Support",
                 contactBtn: "Contact Support",
                 contactSubject: "[MaiMai] Feedback from user",
@@ -1389,7 +1462,7 @@
         }
         function getCopyrightLine() {
             const t = I18N[currentLang] || I18N.vi;
-            return String(t.copyrightLine || '© {year} ViMai · MaiMai · All rights reserved.').replace(/\{year\}/g, String(APP_CONFIG.copyrightYear || 2026));
+            return String(t.copyrightLine || '© {year} ViMai Ecosystem. All rights reserved.').replace(/\{year\}/g, String(APP_CONFIG.copyrightYear || 2026));
         }
 
         function buildFoodSearchIndex() {
@@ -2574,6 +2647,9 @@
             if (aboutCopy) aboutCopy.innerText = copyright;
             const coachCopy = document.getElementById('coach-copyright');
             if (coachCopy) coachCopy.innerText = copyright;
+            document.querySelectorAll('.vimai-ecosystem-footer .legal-main').forEach(function (el) {
+                el.innerText = copyright;
+            });
             const noteInput = document.getElementById('daily-note-input');
             if (noteInput) noteInput.placeholder = getMemoPlaceholder();
             renderHealthAndHome(); renderCalendar(); renderBMIAnalysis(); renderFavorites(); updateMultiPersonaCoach(true);

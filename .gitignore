@@ -2,6 +2,9 @@ node_modules/
 dist/
 build/
 .DS_Store
+.env
+.env.local
+.env.*.local
 
 # Android / Capacitor build artifacts
 android/.gradle/
@@ -20,7 +23,7 @@ android/signing-credentials.local.txt
 android/maimai-upload.jks
 local.properties
 
-# Supabase local secrets (use Netlify env in production)
+# Supabase local secrets (use Cloudflare env / config.local.example in production)
 www/js/supabase/config.local.js
 
 # Local backups / debug captures
