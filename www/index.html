@@ -1548,6 +1548,8 @@
             return true;
         }
         function bindDayBoundaryLifecycle() {
+            if (window.__MAIMAI_DAY_BOUNDARY_BOUND__) return;
+            window.__MAIMAI_DAY_BOUNDARY_BOUND__ = true;
             document.addEventListener('visibilitychange', function () {
                 if (document.visibilityState === 'visible') refreshTodayBoundary({ render: true });
             });
@@ -3511,9 +3513,64 @@
             document.getElementById('onboarding-modal').classList.remove('hidden');
         }
 
+        let activeTabId = 'home';
+        let chartInitTimer = null;
+
+        /**
+         * SPA "pop" equivalent: close the top overlay without opening a new screen.
+         * Prevents modal/tab stack bloat (Flutter Navigator.push analog).
+         */
+        function closeTopOverlayLayer() {
+            var ids = ['onboarding-modal', 'water-modal', 'sleep-modal', 'edit-gram-modal'];
+            for (var i = 0; i < ids.length; i++) {
+                var el = document.getElementById(ids[i]);
+                if (el && !el.classList.contains('hidden')) {
+                    el.classList.add('hidden');
+                    return true;
+                }
+            }
+            var day = document.getElementById('day-detail-panel');
+            if (day && !day.classList.contains('hidden')) {
+                day.classList.add('hidden');
+                return true;
+            }
+            var search = document.getElementById('search-results-box');
+            if (search && !search.classList.contains('hidden')) {
+                search.classList.add('hidden');
+                return true;
+            }
+            var foodCalc = document.getElementById('selected-food-calculator');
+            if (foodCalc && !foodCalc.classList.contains('hidden')) {
+                foodCalc.classList.add('hidden');
+                try {
+                    var foodInput = document.getElementById('food-search-input');
+                    if (foodInput) foodInput.value = '';
+                    currentSelectedFood = null;
+                } catch (e) { /* ignore */ }
+                return true;
+            }
+            return false;
+        }
+
+        /**
+         * Hardware / browser back: pop overlay → return to home tab → else allow exit.
+         * Never "push" a previous screen instance.
+         */
+        function handleAppBackNavigation() {
+            if (closeTopOverlayLayer()) return true;
+            if (activeTabId && activeTabId !== 'home') {
+                switchTab('home');
+                return true;
+            }
+            return false;
+        }
+
         function switchTab(tabId) {
+            if (!tabId) return;
+            activeTabId = tabId;
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.getElementById(`tab-${tabId}`).classList.add('active');
+            var tabEl = document.getElementById('tab-' + tabId);
+            if (tabEl) tabEl.classList.add('active');
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 if (btn.dataset.tab === tabId) btn.classList.replace('text-gray-400', 'text-pink-500');
                 else btn.classList.replace('text-pink-500', 'text-gray-400');
@@ -3526,10 +3583,26 @@
                 refreshTodayBoundary({ render: false });
                 renderHealthAndHome();
             }
-            if (tabId === 'chart') { renderBMIAnalysis(); setTimeout(() => { initChart(); initMacroDonutChart(); }, 50); }
+            if (tabId === 'chart') {
+                renderBMIAnalysis();
+                if (chartInitTimer) {
+                    clearTimeout(chartInitTimer);
+                    chartInitTimer = null;
+                }
+                chartInitTimer = setTimeout(function () {
+                    chartInitTimer = null;
+                    initChart();
+                    initMacroDonutChart();
+                }, 50);
+            }
             if (tabId === 'track') { renderHealthScreen(); renderQuickLogSymptoms(); renderCycleHistory(); renderCalendar(); }
             if (tabId === 'coach') updateMultiPersonaCoach();
         }
+
+        try {
+            window.closeTopOverlayLayer = closeTopOverlayLayer;
+            window.handleAppBackNavigation = handleAppBackNavigation;
+        } catch (eNav) { /* ignore */ }
 
         window.onload = () => {
             try { window.appData = appData; window.saveState = saveState; } catch (e0) { /* ignore */ }
@@ -3563,25 +3636,28 @@
                 console.warn('[MaiMai] Notification init outer exception', eNotif && eNotif.message ? eNotif.message : eNotif);
             }
             try {
-                window.addEventListener('online', function () {
-                    try {
-                        if (typeof window.forceSyncToSupabase === 'function') {
-                            window.forceSyncToSupabase({ dateStr: TODAY_STR }).then(function (res) {
-                                if (res && !res.ok) console.warn('[MaiMai] online forceSync issue', res);
-                            }).catch(function (err) {
-                                console.warn('[MaiMai] online forceSync exception', err && err.message ? err.message : err);
-                            });
-                        } else if (window.MaiMaiSupabaseSync && MaiMaiSupabaseSync.flushQueue) {
-                            MaiMaiSupabaseSync.flushQueue().then(function (res) {
-                                if (res && !res.ok) console.warn('[MaiMai] online flush issue', res);
-                            }).catch(function (err2) {
-                                console.warn('[MaiMai] online flush exception', err2 && err2.message ? err2.message : err2);
-                            });
+                if (!window.__MAIMAI_ONLINE_SYNC_BOUND__) {
+                    window.__MAIMAI_ONLINE_SYNC_BOUND__ = true;
+                    window.addEventListener('online', function () {
+                        try {
+                            if (typeof window.forceSyncToSupabase === 'function') {
+                                window.forceSyncToSupabase({ dateStr: TODAY_STR }).then(function (res) {
+                                    if (res && !res.ok) console.warn('[MaiMai] online forceSync issue', res);
+                                }).catch(function (err) {
+                                    console.warn('[MaiMai] online forceSync exception', err && err.message ? err.message : err);
+                                });
+                            } else if (window.MaiMaiSupabaseSync && MaiMaiSupabaseSync.flushQueue) {
+                                MaiMaiSupabaseSync.flushQueue().then(function (res) {
+                                    if (res && !res.ok) console.warn('[MaiMai] online flush issue', res);
+                                }).catch(function (err2) {
+                                    console.warn('[MaiMai] online flush exception', err2 && err2.message ? err2.message : err2);
+                                });
+                            }
+                        } catch (onlineErr) {
+                            console.warn('[MaiMai] online sync outer exception', onlineErr && onlineErr.message ? onlineErr.message : onlineErr);
                         }
-                    } catch (onlineErr) {
-                        console.warn('[MaiMai] online sync outer exception', onlineErr && onlineErr.message ? onlineErr.message : onlineErr);
-                    }
-                });
+                    });
+                }
             } catch (e2) {
                 console.warn('[MaiMai] online listener setup failed', e2 && e2.message ? e2.message : e2);
             }
@@ -3603,6 +3679,10 @@
         }
 
         function closeTopModalIfOpen() {
+          // Prefer shared SPA pop helper (keeps overlay close order in one place)
+          if (typeof window.closeTopOverlayLayer === 'function') {
+            return !!window.closeTopOverlayLayer();
+          }
           var ids = ['onboarding-modal', 'water-modal', 'sleep-modal', 'edit-gram-modal'];
           for (var i = 0; i < ids.length; i++) {
             var el = document.getElementById(ids[i]);
@@ -3621,21 +3701,31 @@
             search.classList.add('hidden');
             return true;
           }
+          var foodCalc = document.getElementById('selected-food-calculator');
+          if (foodCalc && !foodCalc.classList.contains('hidden')) {
+            foodCalc.classList.add('hidden');
+            return true;
+          }
           return false;
         }
 
         async function initCapacitorBridge() {
           try {
             if (!window.Capacitor) return;
+            if (window.__MAIMAI_CAP_BRIDGE_BOUND__) return;
+            window.__MAIMAI_CAP_BRIDGE_BOUND__ = true;
+
             var plugins = window.Capacitor.Plugins || {};
             var App = plugins.App;
             if (App && App.addListener) {
               App.addListener('backButton', function () {
-                if (closeTopModalIfOpen()) return;
-                if (window.history.length > 1) {
-                  window.history.back();
+                // Pop overlay / return to home — never history.push a duplicate screen
+                if (typeof window.handleAppBackNavigation === 'function') {
+                  if (window.handleAppBackNavigation()) return;
+                } else if (closeTopModalIfOpen()) {
                   return;
                 }
+                // At root (home, no overlay): exit app. Do NOT history.back() in SPA.
                 if (App.exitApp) App.exitApp();
               });
               App.addListener('appStateChange', function (state) {

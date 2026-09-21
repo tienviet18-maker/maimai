@@ -559,6 +559,8 @@
     } catch (e) { /* ignore */ }
   }
 
+  var visibilityBound = false;
+
   async function init(options) {
     options = options || {};
     if (options.getAppData) deps.getAppData = options.getAppData;
@@ -593,13 +595,15 @@
     }
 
     try {
-      root.document.addEventListener('visibilitychange', function () {
-        if (root.document.visibilityState === 'visible') {
-          syncToggleUi();
-          // Catch up: if we're past a slot and not sent, fire once (gentle)
-          catchUpMissedSlots();
-        }
-      });
+      if (!visibilityBound) {
+        visibilityBound = true;
+        root.document.addEventListener('visibilitychange', function () {
+          if (root.document.visibilityState === 'visible') {
+            syncToggleUi();
+            catchUpMissedSlots();
+          }
+        });
+      }
     } catch (e2) { /* ignore */ }
 
     return {
