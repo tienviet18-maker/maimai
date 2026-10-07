@@ -188,7 +188,8 @@
   }
 
   function isoTodayYmd() {
-    return new Date().toISOString().split('T')[0];
+    // device-local calendar date (never UTC toISOString, which shifts the day for UTC+7/+9 users)
+    return toYmdDate(new Date());
   }
 
   function isBadDateInput(v) {
@@ -212,7 +213,7 @@
     try {
       if (!isBadDateInput(root.TODAY_STR)) return String(root.TODAY_STR).trim();
     } catch (e2) { /* ignore */ }
-    // Explicit fallback requested: new Date().toISOString().split('T')[0]
+    // Last-resort fallback: device-local calendar date
     return isoTodayYmd();
   }
 
@@ -1148,8 +1149,48 @@
     }
   }
 
+  /**
+   * Permanently delete this user's cloud data (user-initiated "Delete all data").
+   * public.users cascades to daily_metrics / nutrition_logs / cycle_logs. delete_my_account()
+   * (supabase_schema.sql) then removes the anonymous auth user; if that function is not deployed
+   * yet, the rows are still gone and the session is signed out.
+   * Returns { ok, skipped?, error? }. ok:false means nothing was confirmed deleted in the cloud.
+   */
+  async function deleteMyCloudData() {
+    var client = getClient();
+    if (!client) return { ok: true, skipped: 'not_configured' };
+    var session = null;
+    try {
+      var res = await client.auth.getSession();
+      session = res && res.data && res.data.session;
+    } catch (e) {
+      return { ok: false, error: errMsg(e) };
+    }
+    var uid = session && session.user && session.user.id;
+    if (!uid) return { ok: true, skipped: 'no_session' };
+    try {
+      var del = await client.from('users').delete().eq('id', uid);
+      if (del && del.error) return { ok: false, error: errMsg(del.error) };
+    } catch (e2) {
+      return { ok: false, error: errMsg(e2) };
+    }
+    var accountDeleted = false;
+    try {
+      var rpc = await client.rpc('delete_my_account');
+      accountDeleted = !(rpc && rpc.error);
+      if (rpc && rpc.error) warn('delete_my_account_rpc', errMsg(rpc.error));
+    } catch (e3) {
+      warn('delete_my_account_rpc', errMsg(e3));
+    }
+    pendingDates = Object.create(null);
+    try { root.localStorage.removeItem(SYNC_QUEUE_KEY); } catch (e4) { /* ignore */ }
+    try { await client.auth.signOut(); } catch (e5) { /* session may already be gone */ }
+    return { ok: true, accountDeleted: accountDeleted };
+  }
+
   root.MaiMaiSupabaseSync = {
     init: init,
+    deleteMyCloudData: deleteMyCloudData,
     notifyLocalChange: notifyLocalChange,
     flushQueue: flushQueue,
     forceSyncToSupabase: forceSyncToSupabase,

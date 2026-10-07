@@ -23,6 +23,7 @@
     return String(s || '')
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[đĐ]/g, 'd')
       .toLowerCase();
   }
 
@@ -61,6 +62,16 @@
     ].concat(food.aliases || []).filter(Boolean).join(' '));
   }
 
+  // Multi-word query matches when every word is present in any order ("trung luoc" → "Trứng gà, nguyên quả, luộc").
+  function allWordsMatch(hay, qNorm) {
+    var words = qNorm.split(/[\s,]+/).filter(Boolean);
+    if (words.length < 2) return false;
+    return words.every(function (w) {
+      var re = new RegExp('(?:^|[^a-z0-9])' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + (w.length <= 3 ? '(?:[^a-z0-9]|$)' : ''));
+      return re.test(hay);
+    });
+  }
+
   function scoreFood(food, qNorm, lang) {
     var nVi = stripAccents(food.nameVi);
     var nEn = stripAccents(food.nameEn);
@@ -70,6 +81,7 @@
     else if (nVi.indexOf(qNorm) === 0 || nEn.indexOf(qNorm) === 0 || nJa.indexOf(qNorm) === 0) score += 70;
     else if ((food.aliases || []).some(function (a) { return stripAccents(a) === qNorm; })) score += 55;
     else if (haystack(food).indexOf(qNorm) >= 0) score += 15;
+    else if (allWordsMatch(haystack(food), qNorm)) score += 12;
     else return -1;
 
     if (food.searchPrimary === false) score -= 80;

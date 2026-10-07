@@ -30,10 +30,10 @@ www/js/supabase/config.local.js
 backups/
 *.bak*
 index.html.bak_*
-*.png
-*.xml
-!www/icons/
-!www/icons/**/*.png
+# Only stray screenshots/dumps at the repo root. Android needs its own
+# AndroidManifest.xml, res/**/*.xml and launcher PNGs in git to build from a clean clone.
+/*.png
+/*.xml
 
 # Legacy patch artifacts
 _oneshot_patch.js

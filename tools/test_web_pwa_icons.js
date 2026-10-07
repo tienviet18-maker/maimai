@@ -6,7 +6,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const WEB = path.join('C:', 'Users', 'tienv', 'OneDrive', 'Desktop', 'MAIMAI_WEB_NETLIFY');
+const WEB = require('./web_root').skipUnlessNetlify('web PWA icons');
 const ICONS = path.join(WEB, 'icons');
 
 let passed = 0;
@@ -150,7 +150,11 @@ const foodsHash = require('crypto')
   .update(fs.readFileSync(path.join(WEB, 'data', 'foods', 'foods.json')))
   .digest('hex')
   .toUpperCase();
-assert(foodsHash === '277E958FBC296F5F852D2389BCD5D056B02CABB48A431185873E06F2EA548D32', 'foods hash matches enriched catalog');
+const androidFoodsHash = require('crypto').createHash('sha256')
+  .update(fs.readFileSync(path.join(__dirname, '..', 'www', 'data', 'foods', 'foods.json')))
+  .digest('hex')
+  .toUpperCase();
+assert(foodsHash === androidFoodsHash, 'web foods.json matches Android www catalog');
 
 const admob = fs.readFileSync(path.join(WEB, 'admob.config.js'), 'utf8');
 assert(/enabled:\s*false/.test(admob), 'browser AdMob remains disabled');

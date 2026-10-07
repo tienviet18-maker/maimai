@@ -4,6 +4,8 @@
   "description": "MaiMai — ViMai Ecosystem health companion (Capacitor SPA + Cloudflare Pages)",
   "private": true,
   "scripts": {
+    "test": "node tools/run_tests.js",
+    "relabel:foods": "node tools/relabel_foods_v2.js",
     "build": "node tools/build_web.js",
     "build:web": "node tools/build_web.js",
     "build:pages": "node tools/build_web.js",
@@ -12,17 +14,25 @@
     "sync": "npx cap sync android",
     "open:android": "npx cap open android",
     "build:android:debug": "cd android && .\\gradlew.bat assembleDebug",
-    "build:android:release": "cd android && .\\gradlew.bat bundleRelease"
+    "build:android:release": "cd android && .\\gradlew.bat bundleRelease",
+    "vendor": "node tools/vendor_assets.js",
+    "build:css": "node tools/vendor_assets.js"
   },
   "dependencies": {
     "@capacitor-community/admob": "^7.0.3",
     "@capacitor/android": "^7.4.3",
     "@capacitor/app": "^7.1.0",
     "@capacitor/core": "^7.4.3",
+    "@capacitor/filesystem": "^7.1.9",
+    "@capacitor/share": "^7.0.4",
     "@capacitor/status-bar": "^7.0.2"
   },
   "devDependencies": {
-    "@capacitor/cli": "^7.4.3"
+    "@capacitor/cli": "^7.4.3",
+    "@fontsource-variable/quicksand": "^5.3.0",
+    "@supabase/supabase-js": "^2.49.8",
+    "chart.js": "^4.5.1",
+    "tailwindcss": "^3.4.19"
   },
   "engines": {
     "node": ">=18"

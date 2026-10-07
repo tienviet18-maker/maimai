@@ -19,22 +19,23 @@
     <link rel="canonical" href="https://maimai.vimai.jp/">
     <link rel="manifest" href="manifest.webmanifest">
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="vendor/chart.umd.min.js"></script>
     <script src="data/foods/foods_db.js"></script>
     <script src="energy_engine.js"></script>
     <script src="js/core/architecture.js"></script>
     <script src="js/storage/schema.js"></script>
+    <script src="js/storage/data_tools.js"></script>
     <script src="js/cycle/cycle_engine.js"></script>
     <script src="js/food/food_repository.js"></script>
+    <script src="js/food/recipe_builder.js"></script>
     <script src="js/nutrition/nutrition_bridge.js"></script>
     <script src="js/notifications/notificationEngine.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8/dist/umd/supabase.js"></script>
+    <script src="vendor/supabase.js"></script>
     <script src="js/supabase/config.local.js"></script>
     <script src="js/supabase/supabaseClient.js"></script>
     <script src="js/supabase/supabaseService.js"></script>
     <script src="admob.config.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/fonts.css">
     <style>
         body { font-family: 'Quicksand', sans-serif; background-color: #fdf2f8; user-select: none; -webkit-tap-highlight-color: transparent; }
         ::-webkit-scrollbar { display: none; }
@@ -147,6 +148,8 @@
         }
 
     </style>
+    <!-- Local Tailwind build (npm run vendor). Loaded last, where the CDN runtime used to inject its styles. -->
+    <link rel="stylesheet" href="css/tailwind.css">
 </head>
 <body class="text-gray-800 antialiased h-screen flex flex-col items-center">
 
@@ -260,6 +263,20 @@
                 </div>
             </div>
 
+            <div class="about-card mt-4 space-y-2" id="data-privacy-card">
+                <p class="text-[10px] font-bold text-pink-500 uppercase tracking-wide" data-i18n="dataPrivacyTitle">Dữ liệu & Quyền riêng tư</p>
+                <p class="text-[11px] text-gray-500 leading-relaxed" data-i18n="dataPrivacyHint">Dữ liệu của bạn lưu trên máy này.</p>
+                <div class="grid grid-cols-2 gap-2">
+                    <button type="button" onclick="exportMyData()" class="py-2.5 bg-white border border-pink-200 text-pink-600 font-bold rounded-xl text-xs active:scale-95 transition" data-i18n="exportBtn">📥 Xuất file</button>
+                    <button type="button" onclick="document.getElementById('import-backup-input').click()" class="py-2.5 bg-white border border-pink-200 text-pink-600 font-bold rounded-xl text-xs active:scale-95 transition" data-i18n="importBtn">📤 Khôi phục</button>
+                </div>
+                <input type="file" id="import-backup-input" accept="application/json,.json" class="hidden" onchange="onImportBackupFile(this)">
+                <button type="button" onclick="openPrivacyPolicy()" class="w-full py-2.5 bg-white border border-pink-200 text-pink-600 font-bold rounded-xl text-xs active:scale-95 transition" data-i18n="privacyPolicyLink">Chính sách quyền riêng tư</button>
+                <button type="button" id="ad-privacy-btn" onclick="openAdPrivacyOptions()" class="hidden w-full py-2.5 bg-white border border-pink-200 text-pink-600 font-bold rounded-xl text-xs active:scale-95 transition" data-i18n="adPrivacyBtn">Tùy chọn quảng cáo</button>
+                <button type="button" onclick="deleteMyData()" class="w-full py-2.5 bg-white border border-rose-300 text-rose-600 font-bold rounded-xl text-xs active:scale-95 transition" data-i18n="deleteDataBtn">🗑️ Xóa toàn bộ dữ liệu</button>
+                <p class="text-[10px] text-gray-400 leading-relaxed" data-i18n="medicalDisclaimer">MaiMai không phải thiết bị y tế.</p>
+            </div>
+
             <div class="about-card mt-4 space-y-2" id="about-maimai-card">
                 <p class="text-[10px] font-bold text-pink-500 uppercase tracking-wide" data-i18n="aboutTitle">Về MaiMai</p>
                 <p class="text-sm font-bold text-gray-800" id="about-app-name">MaiMai</p>
@@ -278,6 +295,14 @@
             <button onclick="saveOnboardingProfile()" class="w-full mt-4 bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 rounded-2xl shadow-md active:scale-95 transition text-sm" data-i18n="saveBtn">
                 Lưu & Bắt đầu ✨
             </button>
+        </div>
+    </div>
+
+    <!-- PRIVACY POLICY MODAL -->
+    <div id="privacy-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
+        <div class="bg-white rounded-[2rem] w-full max-w-sm shadow-2xl overflow-hidden flex flex-col h-[85vh]">
+            <iframe id="privacy-frame" title="Privacy Policy" class="w-full flex-1 border-0"></iframe>
+            <button type="button" onclick="closePrivacyPolicy()" class="m-3 py-2.5 bg-pink-500 text-white font-bold rounded-2xl text-sm active:scale-95 transition" data-i18n="closeBtn">Đóng</button>
         </div>
     </div>
 
@@ -550,12 +575,41 @@
                                 <span class="text-[10px] text-gray-500">(P: <b id="calc-result-p">0</b>g, F: <b id="calc-result-f">0</b>g, C: <b id="calc-result-c">0</b>g)</span>
                             </div>
                             <button onclick="addSelectedFoodToMeal()" class="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-2.5 rounded-xl text-xs shadow-md active:scale-95 transition" data-i18n="addToDiaryBtn">+ Thêm vào nhật ký ✨</button>
+                            <button type="button" id="btn-report-food" onclick="reportFoodIssue()" class="w-full text-[10px] font-bold text-gray-400 hover:text-rose-500" data-i18n="reportFoodIssue">⚠️ Báo sai số liệu</button>
                         </div>
                     </div>
                 </div>
 
                 <!-- DIET SUB 2: TỰ NHẬP MÓN -->
                 <div id="sub-view-custom" class="hidden space-y-4">
+                    <div class="bg-white p-5 rounded-3xl border border-pink-100 space-y-3" id="recipe-builder">
+                        <h4 class="font-bold text-pink-700 text-sm" data-i18n="recipeTitle">🍲 Tạo món từ nguyên liệu</h4>
+                        <p class="text-[10px] text-gray-500 leading-relaxed" data-i18n="recipeHint">Chọn nguyên liệu và nhập khối lượng.</p>
+                        <div>
+                            <label class="text-[10px] font-bold text-pink-500 uppercase" data-i18n="recipeNameLabel">Tên món (*)</label>
+                            <input type="text" id="recipe-name" class="w-full mt-1 bg-pink-50/60 border border-pink-200 text-xs rounded-xl px-3 py-2.5 focus:outline-none">
+                        </div>
+                        <div class="relative">
+                            <input type="text" id="recipe-ingredient-search" oninput="onRecipeIngredientSearch(this.value)" class="w-full bg-pink-50/60 border border-pink-200 text-xs rounded-xl px-3 py-2.5 focus:outline-none">
+                            <div id="recipe-ingredient-results" class="hidden mt-1 bg-white rounded-2xl border border-pink-100 max-h-48 overflow-y-auto divide-y divide-gray-100 shadow-lg"></div>
+                        </div>
+                        <div id="recipe-ingredient-list" class="space-y-1.5"></div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-[10px] font-bold text-gray-500 uppercase"><span data-i18n="recipeCookedLabel">Cân sau khi nấu (g)</span></label>
+                                <input type="number" id="recipe-cooked-weight" oninput="renderRecipeBuilder()" class="w-full mt-1 bg-white border border-pink-200 text-xs rounded-xl px-3 py-2.5 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-gray-500 uppercase" data-i18n="recipeServingLabel">Khẩu phần mặc định (g)</label>
+                                <input type="number" id="recipe-serving" oninput="this.dataset.touched = this.value ? '1' : ''" class="w-full mt-1 bg-white border border-pink-200 text-xs rounded-xl px-3 py-2.5 focus:outline-none">
+                            </div>
+                        </div>
+                        <p id="recipe-summary" class="text-[11px] font-bold text-pink-700 bg-pink-50 rounded-xl px-3 py-2"></p>
+                        <div class="flex gap-2">
+                            <button onclick="saveRecipeFood(false)" class="w-1/2 py-2.5 bg-rose-100 text-rose-700 font-bold rounded-xl text-xs active:scale-95 transition" data-i18n="saveToMyFoodsBtn">Lưu My Foods</button>
+                            <button onclick="saveRecipeFood(true)" class="w-1/2 py-2.5 bg-pink-500 text-white font-bold rounded-xl text-xs active:scale-95 transition" data-i18n="saveAndAddTodayBtn">Lưu & Thêm</button>
+                        </div>
+                    </div>
                     <div class="bg-pink-50/90 p-5 rounded-3xl border border-pink-100 space-y-3">
                         <h4 class="font-bold text-pink-700 text-sm" data-i18n="createFoodTitle">✍️ Tạo món ăn thủ công</h4>
                         <div class="grid grid-cols-2 gap-2">
@@ -1063,6 +1117,42 @@
                 legendOvulationMark: "💗 Ước tính rụng trứng",
                 legendLowerFertilityMark: "🟢 Ít khả năng thụ thai",
                 aboutTitle: "Về MaiMai",
+                recipeTitle: "🍲 Tạo món từ nguyên liệu",
+                recipeHint: "Chọn nguyên liệu đúng trạng thái (sống hoặc đã nấu) và nhập khối lượng. Calo được cộng từ số liệu có nguồn của từng nguyên liệu, không ước đoán.",
+                recipeNameLabel: "Tên món (*)",
+                recipeSearchPlaceholder: "🔍 Thêm nguyên liệu: bánh phở, thịt bò, hành lá...",
+                recipeCookedLabel: "Cân sau khi nấu (g)",
+                recipeServingLabel: "Khẩu phần mặc định (g)",
+                recipeOptional: "không bắt buộc",
+                recipeTotalLine: "{n} nguyên liệu · {g} g · {kcal} kcal · {per} kcal/100g",
+                recipeEmpty: "Chưa có nguyên liệu nào.",
+                recipeNeedName: "Hãy đặt tên món và thêm ít nhất 1 nguyên liệu có số calo.",
+                recipeSaved: "Đã lưu \"{name}\" vào Món của tôi.",
+                recipeSourceLine: "Tính từ {n} nguyên liệu theo công thức của bạn",
+                searchCreateRecipe: "➕ Tạo \"{q}\" từ nguyên liệu",
+                deleteMyFoodConfirm: "Xóa \"{name}\" khỏi Món của tôi? Các bữa đã ghi vẫn giữ nguyên.",
+                reportFoodIssue: "⚠️ Báo sai số liệu",
+                reportFoodSubject: "[MaiMai] Báo sai dữ liệu món {id}",
+                reportFoodBody: "Món: {name}\nMã: {id}\nNguồn: {source} {sourceId}\n\nĐiều chưa đúng:\n",
+                dataPrivacyTitle: "Dữ liệu & Quyền riêng tư",
+                dataPrivacyHint: "Dữ liệu của bạn lưu trên máy này (và bản sao trên máy chủ nếu đồng bộ đang bật). Bạn có thể sao lưu, khôi phục hoặc xóa vĩnh viễn bất cứ lúc nào.",
+                importBtn: "📤 Khôi phục",
+                deleteDataBtn: "🗑️ Xóa toàn bộ dữ liệu",
+                privacyPolicyLink: "Chính sách quyền riêng tư",
+                adPrivacyBtn: "Tùy chọn quảng cáo",
+                closeBtn: "Đóng",
+                exportDone: "Đã tạo file sao lưu {file}.",
+                exportFailed: "Không tạo được file sao lưu. Vui lòng thử lại.",
+                importConfirm: "Khôi phục bản sao lưu ({date}, {days} ngày dữ liệu)? Toàn bộ dữ liệu hiện tại trên máy này sẽ bị thay thế.",
+                importInvalid: "File này không phải bản sao lưu MaiMai hợp lệ.",
+                importNewer: "Bản sao lưu được tạo từ phiên bản MaiMai mới hơn. Hãy cập nhật app rồi thử lại.",
+                importDone: "Đã khôi phục dữ liệu. MaiMai sẽ tải lại.",
+                deleteConfirm: "Xóa vĩnh viễn toàn bộ dữ liệu MaiMai (hồ sơ, cân nặng, bữa ăn, chu kỳ, ghi chú) trên máy này và trên máy chủ? Không thể hoàn tác. Nên xuất file sao lưu trước.",
+                deleteTypePrompt: "Để xác nhận, hãy gõ chữ {word}",
+                deleteWord: "XOA",
+                deleteDone: "Đã xóa toàn bộ dữ liệu. MaiMai sẽ bắt đầu lại từ đầu.",
+                deleteCloudFailed: "Chưa xóa được dữ liệu trên máy chủ (có thể do mất mạng), nên chưa xóa gì cả. Hãy thử lại khi có mạng.",
+                medicalDisclaimer: "MaiMai không phải thiết bị y tế. Calo, chu kỳ và ngày rụng trứng chỉ là ước tính để tham khảo, không dùng để chẩn đoán hay tránh thai. Hãy hỏi bác sĩ khi có vấn đề sức khỏe.",
                 supportLabel: "Hỗ trợ",
                 versionLabel: "Phiên bản",
                 copyrightLine: "© {year} ViMai Ecosystem. All rights reserved.",
@@ -1210,6 +1300,42 @@
                 legendOvulationMark: "💗 推定排卵日",
                 legendLowerFertilityMark: "🟢 妊娠しにくい可能性がある日",
                 aboutTitle: "MaiMaiについて",
+                recipeTitle: "🍲 材料から料理を作成",
+                recipeHint: "材料を状態（生・調理済み）に合わせて選び、重さを入力してください。カロリーは各材料の出典付きデータを合計して計算します（推測はしません）。",
+                recipeNameLabel: "料理名 (*)",
+                recipeSearchPlaceholder: "🔍 材料を追加：米麺、牛肉、ねぎ...",
+                recipeCookedLabel: "調理後の重さ (g)",
+                recipeServingLabel: "標準の量 (g)",
+                recipeOptional: "任意",
+                recipeTotalLine: "材料{n}品 · {g} g · {kcal} kcal · {per} kcal/100g",
+                recipeEmpty: "まだ材料がありません。",
+                recipeNeedName: "料理名を入力し、カロリーのある材料を1つ以上追加してください。",
+                recipeSaved: "「{name}」をマイフードに保存しました。",
+                recipeSourceLine: "あなたのレシピ（材料{n}品）から計算",
+                searchCreateRecipe: "➕「{q}」を材料から作成",
+                deleteMyFoodConfirm: "「{name}」をマイフードから削除しますか？記録済みの食事はそのまま残ります。",
+                reportFoodIssue: "⚠️ データの誤りを報告",
+                reportFoodSubject: "[MaiMai] 食品データの誤り {id}",
+                reportFoodBody: "食品：{name}\nID：{id}\n出典：{source} {sourceId}\n\n誤りの内容：\n",
+                dataPrivacyTitle: "データとプライバシー",
+                dataPrivacyHint: "データはこの端末に保存されます（同期が有効な場合はサーバーにも複製されます）。いつでもバックアップ、復元、完全削除ができます。",
+                importBtn: "📤 復元",
+                deleteDataBtn: "🗑️ すべてのデータを削除",
+                privacyPolicyLink: "プライバシーポリシー",
+                adPrivacyBtn: "広告の設定",
+                closeBtn: "閉じる",
+                exportDone: "バックアップファイル {file} を作成しました。",
+                exportFailed: "バックアップを作成できませんでした。もう一度お試しください。",
+                importConfirm: "バックアップ（{date}、{days}日分）を復元しますか？この端末の現在のデータはすべて置き換えられます。",
+                importInvalid: "このファイルは有効なMaiMaiバックアップではありません。",
+                importNewer: "このバックアップは新しいバージョンのMaiMaiで作成されています。アプリを更新してからお試しください。",
+                importDone: "データを復元しました。MaiMaiを再読み込みします。",
+                deleteConfirm: "この端末とサーバー上のMaiMaiのデータ（プロフィール、体重、食事、周期、メモ）をすべて完全に削除しますか？元に戻せません。先にバックアップをおすすめします。",
+                deleteTypePrompt: "確認のため「{word}」と入力してください",
+                deleteWord: "削除",
+                deleteDone: "すべてのデータを削除しました。MaiMaiを最初から始めます。",
+                deleteCloudFailed: "サーバー上のデータを削除できなかったため（通信エラーの可能性）、何も削除していません。通信できる環境で再度お試しください。",
+                medicalDisclaimer: "MaiMaiは医療機器ではありません。カロリー、周期、排卵日は参考のための推定であり、診断や避妊には使用できません。健康に関する不安は医師にご相談ください。",
                 supportLabel: "サポート",
                 versionLabel: "バージョン",
                 copyrightLine: "© {year} ViMai Ecosystem. All rights reserved.",
@@ -1357,6 +1483,42 @@
                 legendOvulationMark: "💗 Estimated ovulation",
                 legendLowerFertilityMark: "🟢 Lower-fertility days",
                 aboutTitle: "About MaiMai",
+                recipeTitle: "🍲 Build a dish from ingredients",
+                recipeHint: "Pick each ingredient in the state you use it (raw or cooked) and enter its weight. Calories are added up from each ingredient's sourced data, with no guessing.",
+                recipeNameLabel: "Dish name (*)",
+                recipeSearchPlaceholder: "🔍 Add ingredient: rice noodles, beef, scallion...",
+                recipeCookedLabel: "Weight after cooking (g)",
+                recipeServingLabel: "Default serving (g)",
+                recipeOptional: "optional",
+                recipeTotalLine: "{n} ingredients · {g} g · {kcal} kcal · {per} kcal/100g",
+                recipeEmpty: "No ingredients yet.",
+                recipeNeedName: "Give the dish a name and add at least one ingredient with calories.",
+                recipeSaved: "Saved \"{name}\" to My Foods.",
+                recipeSourceLine: "Calculated from your recipe ({n} ingredients)",
+                searchCreateRecipe: "➕ Build \"{q}\" from ingredients",
+                deleteMyFoodConfirm: "Remove \"{name}\" from My Foods? Meals you already logged stay as they are.",
+                reportFoodIssue: "⚠️ Report a data error",
+                reportFoodSubject: "[MaiMai] Food data error {id}",
+                reportFoodBody: "Food: {name}\nID: {id}\nSource: {source} {sourceId}\n\nWhat is wrong:\n",
+                dataPrivacyTitle: "Data & Privacy",
+                dataPrivacyHint: "Your data is stored on this device (and copied to our server when sync is on). You can back it up, restore it or delete it permanently at any time.",
+                importBtn: "📤 Restore",
+                deleteDataBtn: "🗑️ Delete all data",
+                privacyPolicyLink: "Privacy Policy",
+                adPrivacyBtn: "Ad privacy options",
+                closeBtn: "Close",
+                exportDone: "Backup file {file} created.",
+                exportFailed: "Could not create the backup. Please try again.",
+                importConfirm: "Restore this backup ({date}, {days} days of data)? All current data on this device will be replaced.",
+                importInvalid: "This file is not a valid MaiMai backup.",
+                importNewer: "This backup was made by a newer version of MaiMai. Please update the app and try again.",
+                importDone: "Data restored. MaiMai will reload.",
+                deleteConfirm: "Permanently delete all MaiMai data (profile, weight, meals, cycle, notes) on this device and on our server? This cannot be undone. Consider exporting a backup first.",
+                deleteTypePrompt: "To confirm, type {word}",
+                deleteWord: "DELETE",
+                deleteDone: "All data deleted. MaiMai will start fresh.",
+                deleteCloudFailed: "Server data could not be deleted (you may be offline), so nothing was deleted. Please try again when you are online.",
+                medicalDisclaimer: "MaiMai is not a medical device. Calories, cycle and ovulation dates are estimates for reference only and must not be used for diagnosis or contraception. Talk to a doctor about health concerns.",
                 supportLabel: "Support",
                 versionLabel: "Version",
                 copyrightLine: "© {year} ViMai Ecosystem. All rights reserved.",
@@ -1396,10 +1558,18 @@
         const FOOD_CATALOG_PENDING = Array.isArray(window.FOOD_CATALOG_PENDING) ? window.FOOD_CATALOG_PENDING : [];
         let FOOD_SEARCH_INDEX = null;
 
-        /* MAIMAI_TZ_ASIA_TOKYO: calendar dates use Asia/Tokyo; YYYY-MM-DD never UTC-shifted.
+        /* MAIMAI_TZ_DEVICE: calendar dates follow the device time zone (Vietnam users get Asia/Ho_Chi_Minh,
+           Japan users Asia/Tokyo, …); YYYY-MM-DD is never UTC-shifted. Falls back to Asia/Tokyo (the previous
+           fixed zone) only if the runtime cannot report a valid zone. Existing date keys are not rewritten.
            Daily food/calories live in appData.dailyRecords[YYYY-MM-DD] — never wipe history on day change.
            Home/"Hôm nay" reads ONLY today; previous days remain in storage and via Calo ←/→ + calendar. */
-        const MAIMAI_APP_TIMEZONE = 'Asia/Tokyo';
+        const MAIMAI_APP_TIMEZONE = (function resolveAppTimeZone() {
+            try {
+                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                if (tz) { new Intl.DateTimeFormat('en-CA', { timeZone: tz }); return tz; }
+            } catch (e) { /* invalid or missing zone */ }
+            return 'Asia/Tokyo';
+        })();
         function pad2(n) { return String(n).padStart(2, '0'); }
         function normalizeDateKey(raw) {
             const m = String(raw || '').trim().match(/(\d{4})\D(\d{1,2})\D(\d{1,2})/);
@@ -1419,7 +1589,7 @@
                 const norm = normalizeDateKey(raw);
                 if (norm) return norm;
             } catch (e) { /* fall through */ }
-            // Fallback: format via Asia/Tokyo parts (avoid UTC toISOString day shift)
+            // Fallback: format via app time-zone parts (avoid UTC toISOString day shift)
             try {
                 const parts = new Intl.DateTimeFormat('en-US', {
                     timeZone: MAIMAI_APP_TIMEZONE,
@@ -1923,7 +2093,8 @@
             };
         }
 
-        function searchFoods(query) {
+        function searchFoods(query, opts) {
+            opts = opts || {};
             const rawQ = String(query || '').trim();
             const qNorm = normalizeStr(rawQ);
             const qAccent = normalizeKeepDiacritics(rawQ);
@@ -1947,6 +2118,13 @@
             const looksVietnameseQuery = preferAccent || /pho|banh|bun|com|thit|goi|nuoc mam|rau/i.test(qNorm) || /フォー|バインミー|肉|魚|ご飯/.test(rawQ);
             const bareEggQuery = /^(trung|trứng|egg|卵)$/i.test(rawQ.trim()) || /^(trung|egg)$/i.test(qNorm);
 
+            // Multi-word queries also match when every word is present (any order), e.g.
+            // "cơm trắng" → "Cơm, gạo trắng, gạo tẻ". Words ≤3 chars must match a whole word.
+            const wordRe = (w, accent) => new RegExp((accent ? '(?:^|[^\\p{L}\\p{N}])' : '(?:^|[^a-z0-9])') + escapeRe(w) + (w.length <= 3 ? (accent ? '(?:[^\\p{L}\\p{N}]|$)' : '(?:[^a-z0-9]|$)') : ''), accent ? 'u' : '');
+            const qWordsAccent = qAccent.split(/[\s,]+/).filter(Boolean);
+            const qWordsNorm = qNorm.split(/[\s,]+/).filter(Boolean);
+            const qWordReAccent = qWordsAccent.length > 1 ? qWordsAccent.map(w => wordRe(w, true)) : null;
+            const qWordReNorm = qWordsNorm.length > 1 ? qWordsNorm.map(w => wordRe(w, false)) : null;
             const scored = [];
             for (let i = 0; i < FOOD_SEARCH_INDEX.length; i++) {
                 const row = FOOD_SEARCH_INDEX[i];
@@ -1954,9 +2132,11 @@
                 if (preferAccent) {
                     if (row.hayAccent.includes(qAccent)) matched = true;
                     if (accentTokenRe && !accentTokenRe.test(row.hayAccent)) matched = false;
+                    if (!matched && qWordReAccent && qWordReAccent.every(re => re.test(row.hayAccent))) matched = true;
                 } else {
                     if (row.hay.includes(qNorm)) matched = true;
                     if (tokenRe && !tokenRe.test(row.hay)) matched = false;
+                    if (!matched && qWordReNorm && qWordReNorm.every(re => re.test(row.hay))) matched = true;
                 }
                 if (!matched) continue;
                 const f = row.food;
@@ -1979,6 +2159,11 @@
                     else if ((f.aliases || []).some(a => normalizeStr(a) === qNorm)) score += 40;
                     else score += 10;
                 }
+                // Head of the label (text before the first comma) equal to the query: "cam" → "Cam, sống, …"
+                const headA = normalizeKeepDiacritics(String(f.nameVi || '').split(',')[0]);
+                if (headA && (headA === qAccent || normalizeStr(headA) === qNorm)) score += 40;
+                if ((f.aliases || []).some(a => normalizeKeepDiacritics(a) === qAccent || normalizeStr(a) === qNorm)) score += 25;
+                if (f.family === 'egg' && !/trung|egg|卵|たまご|タマゴ/.test(qNorm + ' ' + rawQ)) score -= 50;
                 if (f.cuisine === 'vietnamese') score += looksVietnameseQuery ? 35 : 15;
                 if (f.source === 'MEXT' && /[\u3040-\u30ff\u4e00-\u9faf]/.test(rawQ)) score += 15;
                 if (f.preparation && f.preparation !== 'unspecified') {
@@ -2013,7 +2198,15 @@
                 scored.push({ f, score, foodKey: f.foodKey || f.id });
             }
             scored.sort((a, b) => b.score - a.score || String(a.foodKey).localeCompare(String(b.foodKey)) || String(a.f.nameVi).localeCompare(String(b.f.nameVi)));
-            const masterMatches = scored.slice(0, 40).map(s => s.f);
+            let masterMatches = scored.slice(0, 40).map(s => s.f);
+            // "phở bò" / "bún chả" have no verified row yet: fall back to the base dish/noodle rows
+            // (e.g. "Phở, có thịt", "Bún/bánh phở") instead of an empty list. Never invents a match.
+            const qWords = qAccent.split(/\s+/).filter(Boolean);
+            if (!masterMatches.length && qWords.length > 1 && !opts.relaxed &&
+                /^(phở|pho|bún|bun|cháo|chao|miến|mien|mì|mi|cơm|com|xôi|xoi|canh)$/.test(qWords[0])) {
+                const base = searchFoods(qWords[0], { relaxed: true });
+                return { masterMatches: base.masterMatches, myFoodMatches, relaxedFrom: rawQ };
+            }
             return { masterMatches, myFoodMatches };
         }
 
@@ -2032,6 +2225,7 @@
             
             if (tab === 'myfoods') renderMyFoodsList();
             if (tab === 'search') renderFavorites();
+            if (tab === 'custom') applyRecipeBuilderI18n();
         }
 
         function toggleFavoriteCurrent() {
@@ -2063,6 +2257,11 @@
                 },
                 createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), favorite: false
             };
+            if (foodData.recipe) {
+                newFood.source = 'user_recipe';
+                newFood.provenanceType = 'calculated';
+                newFood.recipe = foodData.recipe;
+            }
             if (!appData.myFoods) appData.myFoods = [];
             appData.myFoods.unshift(newFood);
             saveState(); return newFood;
@@ -2132,8 +2331,10 @@
                 const kcal = f.nutritionPer100g?.energyKcal ?? '--';
                 return '<div class="bg-white p-3 rounded-2xl border border-pink-100 flex justify-between items-center shadow-sm">' +
                     '<div><p class="font-bold text-xs text-gray-800">🥗 ' + escapeHtml(f.name) + '</p>' +
-                    '<p class="text-[10px] text-gray-400 mt-0.5">' + kcal + ' kcal / 100g · ' + (f.defaultGrams || 100) + 'g</p></div>' +
-                    '<button onclick="selectFoodItem(\'' + f.id + '\', \'user\'); switchSubDietTab(\'search\');" class="px-3 py-1.5 bg-pink-500 text-white text-[10px] font-bold rounded-xl">+</button></div>';
+                    '<p class="text-[10px] text-gray-400 mt-0.5">' + kcal + ' kcal / 100g · ' + (f.defaultGrams || 100) + 'g</p>' +
+                    (f.recipe ? '<p class="text-[9px] text-pink-400 mt-0.5">' + escapeHtml(i18nText('recipeSourceLine', { n: f.recipe.ingredients.length })) + '</p>' : '') + '</div>' +
+                    '<div class="flex gap-1.5 shrink-0"><button onclick="deleteMyFood(\'' + f.id + '\')" class="px-2.5 py-1.5 bg-white border border-rose-200 text-rose-500 text-[10px] font-bold rounded-xl">🗑️</button>' +
+                    '<button onclick="selectFoodItem(\'' + f.id + '\', \'user\'); switchSubDietTab(\'search\');" class="px-3 py-1.5 bg-pink-500 text-white text-[10px] font-bold rounded-xl">+</button></div></div>';
             }).join('');
         }
 
@@ -2189,6 +2390,198 @@
             deleteDailyFoodLog(logId, dateStr);
             renderDietView();
             if (dateStr === TODAY_STR) renderHealthAndHome();
+        }
+
+        // ================= RECIPE BUILDER =================
+        let recipeItems = [];
+
+        function onRecipeIngredientSearch(query) {
+            const box = document.getElementById('recipe-ingredient-results');
+            if (!box) return;
+            if (!String(query || '').trim()) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+            const { masterMatches } = searchFoods(query);
+            box.innerHTML = masterMatches.slice(0, 10).map(f => {
+                const kcal = f.nutritionPer100g && f.nutritionPer100g.energyKcal != null ? f.nutritionPer100g.energyKcal : '--';
+                return `<div onclick="addRecipeIngredient('${f.id}')" class="p-2.5 hover:bg-pink-50 cursor-pointer flex justify-between items-center gap-2"><div class="min-w-0"><p class="text-xs font-bold text-gray-800 truncate">${escapeHtml(foodDisplayName(f))}</p><p class="text-[9px] text-gray-400 truncate">${escapeHtml(foodResultSubtitle(f))}</p></div><span class="text-[10px] font-bold text-orange-500 shrink-0">${kcal} kcal</span></div>`;
+            }).join('') || `<div class="p-2.5 text-[11px] text-gray-400 text-center">${escapeHtml(currentLang === 'ja' ? '見つかりません' : currentLang === 'en' ? 'No foods found' : 'Không tìm thấy món')}</div>`;
+            box.classList.remove('hidden');
+        }
+
+        function addRecipeIngredient(id) {
+            const food = FOOD_MASTER.find(f => f.id === id);
+            if (!food) return;
+            recipeItems.push({ food: food, grams: food.defaultGrams || 100 });
+            const input = document.getElementById('recipe-ingredient-search');
+            if (input) input.value = '';
+            onRecipeIngredientSearch('');
+            renderRecipeBuilder();
+        }
+
+        function setRecipeIngredientGrams(idx, value) {
+            if (!recipeItems[idx]) return;
+            recipeItems[idx].grams = Math.max(0, Number(value) || 0);
+            renderRecipeBuilder(true);
+        }
+
+        function removeRecipeIngredient(idx) {
+            recipeItems.splice(idx, 1);
+            renderRecipeBuilder();
+        }
+
+        function renderRecipeBuilder(keepList) {
+            const list = document.getElementById('recipe-ingredient-list');
+            if (list && !keepList) {
+                list.innerHTML = recipeItems.length === 0
+                    ? `<p class="text-[11px] text-gray-400 text-center py-1">${escapeHtml(i18nText('recipeEmpty'))}</p>`
+                    : recipeItems.map((it, i) => `<div class="flex items-center gap-2 bg-pink-50/50 rounded-xl px-2.5 py-1.5"><p class="flex-1 min-w-0 text-[11px] font-bold text-gray-700 truncate">${escapeHtml(foodDisplayName(it.food))}</p><input type="number" min="0" value="${it.grams}" oninput="setRecipeIngredientGrams(${i}, this.value)" class="w-16 bg-white border border-pink-200 text-xs font-bold text-pink-600 rounded-lg px-2 py-1 text-center focus:outline-none"><span class="text-[10px] text-gray-400">g</span><button type="button" onclick="removeRecipeIngredient(${i})" class="text-rose-400 text-sm px-1">✕</button></div>`).join('');
+            }
+            const cooked = Number(document.getElementById('recipe-cooked-weight')?.value) || 0;
+            const res = MaiMaiRecipe.computeRecipe(recipeItems, cooked);
+            const summary = document.getElementById('recipe-summary');
+            if (summary) {
+                summary.innerText = res.ingredientCount === 0 ? '' : i18nText('recipeTotalLine', {
+                    n: res.ingredientCount, g: res.finalGrams,
+                    kcal: res.totals.energyKcal == null ? '--' : res.totals.energyKcal,
+                    per: res.per100g.energyKcal == null ? '--' : res.per100g.energyKcal
+                });
+                summary.classList.toggle('hidden', res.ingredientCount === 0);
+            }
+            const serving = document.getElementById('recipe-serving');
+            if (serving && !serving.dataset.touched) serving.placeholder = res.finalGrams ? String(res.finalGrams) : '';
+            return res;
+        }
+
+        function startRecipeFromSearch() {
+            const q = (document.getElementById('food-search-input')?.value || '').trim();
+            switchSubDietTab('custom');
+            const name = document.getElementById('recipe-name');
+            if (name && q && !name.value) name.value = q;
+            document.getElementById('recipe-builder')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            document.getElementById('recipe-ingredient-search')?.focus();
+        }
+
+        function saveRecipeFood(addToday) {
+            const name = (document.getElementById('recipe-name')?.value || '').trim();
+            const cooked = Number(document.getElementById('recipe-cooked-weight')?.value) || 0;
+            const res = MaiMaiRecipe.computeRecipe(recipeItems, cooked);
+            if (!name || !res.ok) { alert(i18nText('recipeNeedName')); return; }
+            const servingGrams = Number(document.getElementById('recipe-serving')?.value) || res.finalGrams || 100;
+            const n = res.per100g;
+            const newFood = createMyFood({
+                name: name, defaultGrams: servingGrams, energyKcal: n.energyKcal,
+                protein: n.protein == null ? '' : n.protein, fat: n.fat == null ? '' : n.fat,
+                carbohydrate: n.carbohydrate == null ? '' : n.carbohydrate, fiber: n.fiber == null ? '' : n.fiber,
+                sodium: n.sodium == null ? '' : n.sodium,
+                recipe: MaiMaiRecipe.recipeRecord(recipeItems, cooked)
+            });
+            if (addToday) {
+                const meal = document.getElementById('custom-food-meal')?.value || 'Trưa';
+                addFoodToDailyLog(newFood, servingGrams, meal, getLocalDateStr(dietViewDate));
+                renderHealthAndHome();
+            }
+            recipeItems = [];
+            ['recipe-name', 'recipe-cooked-weight', 'recipe-serving'].forEach(id => { const el = document.getElementById(id); if (el) { el.value = ''; delete el.dataset.touched; } });
+            renderRecipeBuilder();
+            renderMyFoodsList();
+            alert(i18nText('recipeSaved', { name: name }));
+        }
+
+        function deleteMyFood(id) {
+            const food = (appData.myFoods || []).find(f => f.id === id);
+            if (!food || !confirm(i18nText('deleteMyFoodConfirm', { name: food.name }))) return;
+            appData.myFoods = appData.myFoods.filter(f => f.id !== id);
+            if (Array.isArray(appData.favorites)) appData.favorites = appData.favorites.filter(f => f !== id);
+            saveState();
+            renderMyFoodsList();
+            if (typeof renderFavorites === 'function') renderFavorites();
+        }
+
+        function reportFoodIssue() {
+            if (!currentSelectedFood) return;
+            const f = currentSelectedFood.item;
+            const vars = { id: f.id, name: foodDisplayName(f), source: f.source || '', sourceId: f.sourceId || '' };
+            const href = 'mailto:' + APP_CONFIG.supportEmail + '?subject=' + encodeURIComponent(i18nText('reportFoodSubject', vars)) + '&body=' + encodeURIComponent(i18nText('reportFoodBody', vars));
+            const a = document.createElement('a');
+            a.href = href; a.rel = 'noopener'; a.style.display = 'none';
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        }
+
+        function applyRecipeBuilderI18n() {
+            const ph = document.getElementById('recipe-ingredient-search');
+            if (ph) ph.placeholder = i18nText('recipeSearchPlaceholder');
+            const cooked = document.getElementById('recipe-cooked-weight');
+            if (cooked) cooked.placeholder = i18nText('recipeOptional');
+            renderRecipeBuilder();
+        }
+
+        // ================= DATA & PRIVACY =================
+        function i18nText(key, vars) {
+            let str = (I18N[currentLang] && I18N[currentLang][key]) || (I18N.vi && I18N.vi[key]) || '';
+            Object.keys(vars || {}).forEach(k => { str = str.split('{' + k + '}').join(String(vars[k])); });
+            return str;
+        }
+
+        async function exportMyData() {
+            try {
+                saveState();
+                const res = await MaiMaiDataTools.exportBackup(appData, { appVersion: APP_CONFIG.version });
+                if (!res.ok) throw new Error(res.reason);
+                if (res.via === 'download') alert(i18nText('exportDone', { file: res.fileName }));
+            } catch (e) {
+                console.warn('[MaiMai] export failed', e);
+                alert(i18nText('exportFailed'));
+            }
+        }
+
+        function onImportBackupFile(input) {
+            const file = input && input.files && input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                input.value = '';
+                const parsed = MaiMaiDataTools.parseBackup(reader.result);
+                if (!parsed.ok) {
+                    alert(i18nText(parsed.reason === 'newer_format' ? 'importNewer' : 'importInvalid'));
+                    return;
+                }
+                const date = parsed.exportedAt ? getLocalDateStr(new Date(parsed.exportedAt)) : '?';
+                if (!confirm(i18nText('importConfirm', { date: date, days: parsed.days }))) return;
+                MaiMaiDataTools.restoreBackupData(parsed.data);
+                alert(i18nText('importDone'));
+                location.reload();
+            };
+            reader.onerror = () => { input.value = ''; alert(i18nText('importInvalid')); };
+            reader.readAsText(file);
+        }
+
+        async function deleteMyData() {
+            if (!confirm(i18nText('deleteConfirm'))) return;
+            const word = i18nText('deleteWord');
+            const typed = prompt(i18nText('deleteTypePrompt', { word: word }));
+            if (typed == null || typed.trim().toUpperCase() !== word.toUpperCase()) return;
+            const res = await MaiMaiDataTools.deleteAllData();
+            if (!res.ok) {
+                alert(i18nText(res.stage === 'cloud' ? 'deleteCloudFailed' : 'exportFailed'));
+                return;
+            }
+            alert(i18nText('deleteDone'));
+            location.reload();
+        }
+
+        function openPrivacyPolicy() {
+            const frame = document.getElementById('privacy-frame');
+            if (frame) frame.src = 'privacy.html?lang=' + encodeURIComponent(currentLang) + '&embed=1';
+            document.getElementById('privacy-modal').classList.remove('hidden');
+        }
+
+        function closePrivacyPolicy() {
+            document.getElementById('privacy-modal').classList.add('hidden');
+        }
+
+        function openAdPrivacyOptions() {
+            if (typeof window.MAIMAI_ADMOB_PRIVACY_OPTIONS === 'function') {
+                window.MAIMAI_ADMOB_PRIVACY_OPTIONS().catch(e => console.warn('[MaiMai] ad privacy options', e));
+            }
         }
 
         function contactViMaiSupport() {
@@ -2630,6 +3023,7 @@
         function setLanguage(lang) {
             currentLang = lang; appData.profile.lang = lang; saveState();
             document.querySelectorAll('[data-i18n]').forEach(el => { const key = el.getAttribute('data-i18n'); if (I18N[lang] && I18N[lang][key] != null) el.innerText = I18N[lang][key]; });
+            if (typeof applyRecipeBuilderI18n === 'function') applyRecipeBuilderI18n();
             ['vi', 'ja', 'en'].forEach(l => { const btn = document.getElementById(`btn-lang-${l}`); if (btn) { if (l === lang) btn.classList.add('active'); else btn.classList.remove('active'); } });
             const headerSelect = document.getElementById('header-lang-select'); if (headerSelect) headerSelect.value = lang;
             const brandTitle = document.getElementById('author-brand-title');
@@ -3182,7 +3576,8 @@
             const { masterMatches, myFoodMatches } = searchFoods(query); resultsBox.innerHTML = '';
             if (masterMatches.length === 0 && myFoodMatches.length === 0) {
                 const emptyMsg = currentLang === 'ja' ? '見つかりません' : currentLang === 'en' ? 'No foods found' : 'Không tìm thấy món';
-                resultsBox.innerHTML = `<div class="p-3 text-xs text-gray-400 text-center">${emptyMsg} "${escapeHtml(query)}".</div>`;
+                resultsBox.innerHTML = `<div class="p-3 text-xs text-gray-400 text-center">${emptyMsg} "${escapeHtml(query)}".</div>` +
+                    `<button type="button" onclick="startRecipeFromSearch()" class="w-full p-3 text-xs font-bold text-pink-600 hover:bg-pink-50">${escapeHtml(i18nText('searchCreateRecipe', { q: query.trim() }))}</button>`;
                 resultsBox.classList.remove('hidden');
                 return;
             }
@@ -3229,7 +3624,9 @@
             const srcEl = document.getElementById('calc-food-source');
             if (srcEl) {
                 const prep = foodResultSubtitle(food);
-                srcEl.innerText = prep || food.source || (type === 'user' ? 'user' : 'master');
+                srcEl.innerText = food.recipe
+                    ? i18nText('recipeSourceLine', { n: food.recipe.ingredients.length })
+                    : (prep || food.source || (type === 'user' ? 'user' : 'master'));
             }
             const n = food.nutritionPer100g || {};
             const setRef = (eid, val) => { const el = document.getElementById(eid); if (el) el.innerText = (val == null ? '--' : val); };
@@ -3238,7 +3635,7 @@
             const favBtn = document.getElementById('btn-calc-fav');
             if(favBtn) favBtn.innerText = (appData.favorites && appData.favorites.includes(food.id)) ? '❤️' : '🤍';
 
-            const defGram = food.defaultGrams || 150;
+            const defGram = food.defaultGrams || 100; // per-100g basis; no hidden 150 g default
             document.getElementById('calc-gram-input').value = defGram; onGramChange(defGram);
         }
 
@@ -3842,6 +4239,25 @@
             // (Capacitor AdMob applies testingDevices only if initializeForTesting is true.)
             var qaDevices = cfg.testingDevices || [];
             var initForTesting = !!(cfg.initializeForTesting || (qaDevices && qaDevices.length));
+            // Google UMP consent (GDPR/EEA, US states). Shows a form only where the AdMob console's
+            // privacy message applies; elsewhere it resolves NOT_REQUIRED. Ads still load if this fails.
+            try {
+              var consent = await AdMob.requestConsentInfo();
+              if (consent && consent.isConsentFormAvailable && consent.status === 'REQUIRED') {
+                consent = await AdMob.showConsentForm();
+              }
+              window.MAIMAI_ADMOB_PRIVACY_OPTIONS = function () {
+                return AdMob.showPrivacyOptionsForm ? AdMob.showPrivacyOptionsForm() : Promise.resolve();
+              };
+              if (consent && consent.privacyOptionsRequirementStatus === 'REQUIRED') {
+                var adPrivacyBtn = document.getElementById('ad-privacy-btn');
+                if (adPrivacyBtn) adPrivacyBtn.classList.remove('hidden');
+              }
+              adLog('consent', consent && consent.status);
+            } catch (consentErr) {
+              adLog('consent_error', String(consentErr && consentErr.message ? consentErr.message : consentErr));
+            }
+
             await AdMob.initialize({
               initializeForTesting: initForTesting,
               testingDevices: qaDevices
@@ -3879,5 +4295,15 @@
       })();
     </script>
 
+    <script>
+        // Offline support on the web/PWA (the native app already ships its files locally).
+        (function () {
+            var native = window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform();
+            if (native || !('serviceWorker' in navigator) || !window.isSecureContext) return;
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('sw.js', { scope: './' }).catch(function () { /* offline cache is optional */ });
+            });
+        })();
+    </script>
 </body>
 </html>
