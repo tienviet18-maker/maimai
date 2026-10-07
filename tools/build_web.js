@@ -9,6 +9,18 @@ const ROOT = path.resolve(__dirname, '..');
 const SRC = path.join(ROOT, 'www');
 const OUT = path.join(ROOT, 'dist');
 
+function hashDir(dir) {
+  const h = require('crypto').createHash('sha256');
+  (function walk(d) {
+    for (const e of fs.readdirSync(d, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+      const p = path.join(d, e.name);
+      if (e.isDirectory()) walk(p);
+      else h.update(path.relative(dir, p)).update(fs.readFileSync(p));
+    }
+  })(dir);
+  return h.digest('hex');
+}
+
 function rmDir(dir) {
   if (!fs.existsSync(dir)) return;
   fs.rmSync(dir, { recursive: true, force: true });
@@ -70,6 +82,14 @@ let html = fs.readFileSync(indexPath, 'utf8');
 html = ensureCanonical(html);
 html = injectSupabaseConfig(html);
 fs.writeFileSync(indexPath, html, 'utf8');
+
+// New service-worker cache per deploy, so returning visitors get the new shell and food data.
+const buildId = (process.env.CF_PAGES_COMMIT_SHA || '').slice(0, 12) || hashDir(OUT).slice(0, 12);
+const swPath = path.join(OUT, 'sw.js');
+if (fs.existsSync(swPath)) {
+  const sw = fs.readFileSync(swPath, 'utf8').replace(/var CACHE = 'maimai-shell-v2';/, "var CACHE = 'maimai-shell-" + buildId + "';");
+  fs.writeFileSync(swPath, sw, 'utf8');
+}
 
 // Cloudflare Pages SPA fallback
 fs.writeFileSync(

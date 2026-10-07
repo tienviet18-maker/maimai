@@ -19,22 +19,22 @@
     <link rel="canonical" href="https://maimai.vimai.jp/">
     <link rel="manifest" href="manifest.webmanifest">
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="vendor/chart.umd.min.js"></script>
     <script src="data/foods/foods_db.js"></script>
     <script src="energy_engine.js"></script>
     <script src="js/core/architecture.js"></script>
     <script src="js/storage/schema.js"></script>
+    <script src="js/storage/data_tools.js"></script>
     <script src="js/cycle/cycle_engine.js"></script>
     <script src="js/food/food_repository.js"></script>
     <script src="js/nutrition/nutrition_bridge.js"></script>
     <script src="js/notifications/notificationEngine.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8/dist/umd/supabase.js"></script>
+    <script src="vendor/supabase.js"></script>
     <script src="js/supabase/config.local.js"></script>
     <script src="js/supabase/supabaseClient.js"></script>
     <script src="js/supabase/supabaseService.js"></script>
     <script src="admob.config.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/fonts.css">
     <style>
         body { font-family: 'Quicksand', sans-serif; background-color: #fdf2f8; user-select: none; -webkit-tap-highlight-color: transparent; }
         ::-webkit-scrollbar { display: none; }
@@ -147,6 +147,8 @@
         }
 
     </style>
+    <!-- Local Tailwind build (npm run vendor). Loaded last, where the CDN runtime used to inject its styles. -->
+    <link rel="stylesheet" href="css/tailwind.css">
 </head>
 <body class="text-gray-800 antialiased h-screen flex flex-col items-center">
 
@@ -260,6 +262,20 @@
                 </div>
             </div>
 
+            <div class="about-card mt-4 space-y-2" id="data-privacy-card">
+                <p class="text-[10px] font-bold text-pink-500 uppercase tracking-wide" data-i18n="dataPrivacyTitle">Dữ liệu & Quyền riêng tư</p>
+                <p class="text-[11px] text-gray-500 leading-relaxed" data-i18n="dataPrivacyHint">Dữ liệu của bạn lưu trên máy này.</p>
+                <div class="grid grid-cols-2 gap-2">
+                    <button type="button" onclick="exportMyData()" class="py-2.5 bg-white border border-pink-200 text-pink-600 font-bold rounded-xl text-xs active:scale-95 transition" data-i18n="exportBtn">📥 Xuất file</button>
+                    <button type="button" onclick="document.getElementById('import-backup-input').click()" class="py-2.5 bg-white border border-pink-200 text-pink-600 font-bold rounded-xl text-xs active:scale-95 transition" data-i18n="importBtn">📤 Khôi phục</button>
+                </div>
+                <input type="file" id="import-backup-input" accept="application/json,.json" class="hidden" onchange="onImportBackupFile(this)">
+                <button type="button" onclick="openPrivacyPolicy()" class="w-full py-2.5 bg-white border border-pink-200 text-pink-600 font-bold rounded-xl text-xs active:scale-95 transition" data-i18n="privacyPolicyLink">Chính sách quyền riêng tư</button>
+                <button type="button" id="ad-privacy-btn" onclick="openAdPrivacyOptions()" class="hidden w-full py-2.5 bg-white border border-pink-200 text-pink-600 font-bold rounded-xl text-xs active:scale-95 transition" data-i18n="adPrivacyBtn">Tùy chọn quảng cáo</button>
+                <button type="button" onclick="deleteMyData()" class="w-full py-2.5 bg-white border border-rose-300 text-rose-600 font-bold rounded-xl text-xs active:scale-95 transition" data-i18n="deleteDataBtn">🗑️ Xóa toàn bộ dữ liệu</button>
+                <p class="text-[10px] text-gray-400 leading-relaxed" data-i18n="medicalDisclaimer">MaiMai không phải thiết bị y tế.</p>
+            </div>
+
             <div class="about-card mt-4 space-y-2" id="about-maimai-card">
                 <p class="text-[10px] font-bold text-pink-500 uppercase tracking-wide" data-i18n="aboutTitle">Về MaiMai</p>
                 <p class="text-sm font-bold text-gray-800" id="about-app-name">MaiMai</p>
@@ -278,6 +294,14 @@
             <button onclick="saveOnboardingProfile()" class="w-full mt-4 bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 rounded-2xl shadow-md active:scale-95 transition text-sm" data-i18n="saveBtn">
                 Lưu & Bắt đầu ✨
             </button>
+        </div>
+    </div>
+
+    <!-- PRIVACY POLICY MODAL -->
+    <div id="privacy-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
+        <div class="bg-white rounded-[2rem] w-full max-w-sm shadow-2xl overflow-hidden flex flex-col h-[85vh]">
+            <iframe id="privacy-frame" title="Privacy Policy" class="w-full flex-1 border-0"></iframe>
+            <button type="button" onclick="closePrivacyPolicy()" class="m-3 py-2.5 bg-pink-500 text-white font-bold rounded-2xl text-sm active:scale-95 transition" data-i18n="closeBtn">Đóng</button>
         </div>
     </div>
 
@@ -1063,6 +1087,25 @@
                 legendOvulationMark: "💗 Ước tính rụng trứng",
                 legendLowerFertilityMark: "🟢 Ít khả năng thụ thai",
                 aboutTitle: "Về MaiMai",
+                dataPrivacyTitle: "Dữ liệu & Quyền riêng tư",
+                dataPrivacyHint: "Dữ liệu của bạn lưu trên máy này (và bản sao trên máy chủ nếu đồng bộ đang bật). Bạn có thể sao lưu, khôi phục hoặc xóa vĩnh viễn bất cứ lúc nào.",
+                importBtn: "📤 Khôi phục",
+                deleteDataBtn: "🗑️ Xóa toàn bộ dữ liệu",
+                privacyPolicyLink: "Chính sách quyền riêng tư",
+                adPrivacyBtn: "Tùy chọn quảng cáo",
+                closeBtn: "Đóng",
+                exportDone: "Đã tạo file sao lưu {file}.",
+                exportFailed: "Không tạo được file sao lưu. Vui lòng thử lại.",
+                importConfirm: "Khôi phục bản sao lưu ({date}, {days} ngày dữ liệu)? Toàn bộ dữ liệu hiện tại trên máy này sẽ bị thay thế.",
+                importInvalid: "File này không phải bản sao lưu MaiMai hợp lệ.",
+                importNewer: "Bản sao lưu được tạo từ phiên bản MaiMai mới hơn. Hãy cập nhật app rồi thử lại.",
+                importDone: "Đã khôi phục dữ liệu. MaiMai sẽ tải lại.",
+                deleteConfirm: "Xóa vĩnh viễn toàn bộ dữ liệu MaiMai (hồ sơ, cân nặng, bữa ăn, chu kỳ, ghi chú) trên máy này và trên máy chủ? Không thể hoàn tác. Nên xuất file sao lưu trước.",
+                deleteTypePrompt: "Để xác nhận, hãy gõ chữ {word}",
+                deleteWord: "XOA",
+                deleteDone: "Đã xóa toàn bộ dữ liệu. MaiMai sẽ bắt đầu lại từ đầu.",
+                deleteCloudFailed: "Chưa xóa được dữ liệu trên máy chủ (có thể do mất mạng), nên chưa xóa gì cả. Hãy thử lại khi có mạng.",
+                medicalDisclaimer: "MaiMai không phải thiết bị y tế. Calo, chu kỳ và ngày rụng trứng chỉ là ước tính để tham khảo, không dùng để chẩn đoán hay tránh thai. Hãy hỏi bác sĩ khi có vấn đề sức khỏe.",
                 supportLabel: "Hỗ trợ",
                 versionLabel: "Phiên bản",
                 copyrightLine: "© {year} ViMai Ecosystem. All rights reserved.",
@@ -1210,6 +1253,25 @@
                 legendOvulationMark: "💗 推定排卵日",
                 legendLowerFertilityMark: "🟢 妊娠しにくい可能性がある日",
                 aboutTitle: "MaiMaiについて",
+                dataPrivacyTitle: "データとプライバシー",
+                dataPrivacyHint: "データはこの端末に保存されます（同期が有効な場合はサーバーにも複製されます）。いつでもバックアップ、復元、完全削除ができます。",
+                importBtn: "📤 復元",
+                deleteDataBtn: "🗑️ すべてのデータを削除",
+                privacyPolicyLink: "プライバシーポリシー",
+                adPrivacyBtn: "広告の設定",
+                closeBtn: "閉じる",
+                exportDone: "バックアップファイル {file} を作成しました。",
+                exportFailed: "バックアップを作成できませんでした。もう一度お試しください。",
+                importConfirm: "バックアップ（{date}、{days}日分）を復元しますか？この端末の現在のデータはすべて置き換えられます。",
+                importInvalid: "このファイルは有効なMaiMaiバックアップではありません。",
+                importNewer: "このバックアップは新しいバージョンのMaiMaiで作成されています。アプリを更新してからお試しください。",
+                importDone: "データを復元しました。MaiMaiを再読み込みします。",
+                deleteConfirm: "この端末とサーバー上のMaiMaiのデータ（プロフィール、体重、食事、周期、メモ）をすべて完全に削除しますか？元に戻せません。先にバックアップをおすすめします。",
+                deleteTypePrompt: "確認のため「{word}」と入力してください",
+                deleteWord: "削除",
+                deleteDone: "すべてのデータを削除しました。MaiMaiを最初から始めます。",
+                deleteCloudFailed: "サーバー上のデータを削除できなかったため（通信エラーの可能性）、何も削除していません。通信できる環境で再度お試しください。",
+                medicalDisclaimer: "MaiMaiは医療機器ではありません。カロリー、周期、排卵日は参考のための推定であり、診断や避妊には使用できません。健康に関する不安は医師にご相談ください。",
                 supportLabel: "サポート",
                 versionLabel: "バージョン",
                 copyrightLine: "© {year} ViMai Ecosystem. All rights reserved.",
@@ -1357,6 +1419,25 @@
                 legendOvulationMark: "💗 Estimated ovulation",
                 legendLowerFertilityMark: "🟢 Lower-fertility days",
                 aboutTitle: "About MaiMai",
+                dataPrivacyTitle: "Data & Privacy",
+                dataPrivacyHint: "Your data is stored on this device (and copied to our server when sync is on). You can back it up, restore it or delete it permanently at any time.",
+                importBtn: "📤 Restore",
+                deleteDataBtn: "🗑️ Delete all data",
+                privacyPolicyLink: "Privacy Policy",
+                adPrivacyBtn: "Ad privacy options",
+                closeBtn: "Close",
+                exportDone: "Backup file {file} created.",
+                exportFailed: "Could not create the backup. Please try again.",
+                importConfirm: "Restore this backup ({date}, {days} days of data)? All current data on this device will be replaced.",
+                importInvalid: "This file is not a valid MaiMai backup.",
+                importNewer: "This backup was made by a newer version of MaiMai. Please update the app and try again.",
+                importDone: "Data restored. MaiMai will reload.",
+                deleteConfirm: "Permanently delete all MaiMai data (profile, weight, meals, cycle, notes) on this device and on our server? This cannot be undone. Consider exporting a backup first.",
+                deleteTypePrompt: "To confirm, type {word}",
+                deleteWord: "DELETE",
+                deleteDone: "All data deleted. MaiMai will start fresh.",
+                deleteCloudFailed: "Server data could not be deleted (you may be offline), so nothing was deleted. Please try again when you are online.",
+                medicalDisclaimer: "MaiMai is not a medical device. Calories, cycle and ovulation dates are estimates for reference only and must not be used for diagnosis or contraception. Talk to a doctor about health concerns.",
                 supportLabel: "Support",
                 versionLabel: "Version",
                 copyrightLine: "© {year} ViMai Ecosystem. All rights reserved.",
@@ -2220,6 +2301,76 @@
             deleteDailyFoodLog(logId, dateStr);
             renderDietView();
             if (dateStr === TODAY_STR) renderHealthAndHome();
+        }
+
+        // ================= DATA & PRIVACY =================
+        function i18nText(key, vars) {
+            let str = (I18N[currentLang] && I18N[currentLang][key]) || (I18N.vi && I18N.vi[key]) || '';
+            Object.keys(vars || {}).forEach(k => { str = str.split('{' + k + '}').join(String(vars[k])); });
+            return str;
+        }
+
+        async function exportMyData() {
+            try {
+                saveState();
+                const res = await MaiMaiDataTools.exportBackup(appData, { appVersion: APP_CONFIG.version });
+                if (!res.ok) throw new Error(res.reason);
+                if (res.via === 'download') alert(i18nText('exportDone', { file: res.fileName }));
+            } catch (e) {
+                console.warn('[MaiMai] export failed', e);
+                alert(i18nText('exportFailed'));
+            }
+        }
+
+        function onImportBackupFile(input) {
+            const file = input && input.files && input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                input.value = '';
+                const parsed = MaiMaiDataTools.parseBackup(reader.result);
+                if (!parsed.ok) {
+                    alert(i18nText(parsed.reason === 'newer_format' ? 'importNewer' : 'importInvalid'));
+                    return;
+                }
+                const date = parsed.exportedAt ? getLocalDateStr(new Date(parsed.exportedAt)) : '?';
+                if (!confirm(i18nText('importConfirm', { date: date, days: parsed.days }))) return;
+                MaiMaiDataTools.restoreBackupData(parsed.data);
+                alert(i18nText('importDone'));
+                location.reload();
+            };
+            reader.onerror = () => { input.value = ''; alert(i18nText('importInvalid')); };
+            reader.readAsText(file);
+        }
+
+        async function deleteMyData() {
+            if (!confirm(i18nText('deleteConfirm'))) return;
+            const word = i18nText('deleteWord');
+            const typed = prompt(i18nText('deleteTypePrompt', { word: word }));
+            if (typed == null || typed.trim().toUpperCase() !== word.toUpperCase()) return;
+            const res = await MaiMaiDataTools.deleteAllData();
+            if (!res.ok) {
+                alert(i18nText(res.stage === 'cloud' ? 'deleteCloudFailed' : 'exportFailed'));
+                return;
+            }
+            alert(i18nText('deleteDone'));
+            location.reload();
+        }
+
+        function openPrivacyPolicy() {
+            const frame = document.getElementById('privacy-frame');
+            if (frame) frame.src = 'privacy.html?lang=' + encodeURIComponent(currentLang) + '&embed=1';
+            document.getElementById('privacy-modal').classList.remove('hidden');
+        }
+
+        function closePrivacyPolicy() {
+            document.getElementById('privacy-modal').classList.add('hidden');
+        }
+
+        function openAdPrivacyOptions() {
+            if (typeof window.MAIMAI_ADMOB_PRIVACY_OPTIONS === 'function') {
+                window.MAIMAI_ADMOB_PRIVACY_OPTIONS().catch(e => console.warn('[MaiMai] ad privacy options', e));
+            }
         }
 
         function contactViMaiSupport() {
@@ -3873,6 +4024,25 @@
             // (Capacitor AdMob applies testingDevices only if initializeForTesting is true.)
             var qaDevices = cfg.testingDevices || [];
             var initForTesting = !!(cfg.initializeForTesting || (qaDevices && qaDevices.length));
+            // Google UMP consent (GDPR/EEA, US states). Shows a form only where the AdMob console's
+            // privacy message applies; elsewhere it resolves NOT_REQUIRED. Ads still load if this fails.
+            try {
+              var consent = await AdMob.requestConsentInfo();
+              if (consent && consent.isConsentFormAvailable && consent.status === 'REQUIRED') {
+                consent = await AdMob.showConsentForm();
+              }
+              window.MAIMAI_ADMOB_PRIVACY_OPTIONS = function () {
+                return AdMob.showPrivacyOptionsForm ? AdMob.showPrivacyOptionsForm() : Promise.resolve();
+              };
+              if (consent && consent.privacyOptionsRequirementStatus === 'REQUIRED') {
+                var adPrivacyBtn = document.getElementById('ad-privacy-btn');
+                if (adPrivacyBtn) adPrivacyBtn.classList.remove('hidden');
+              }
+              adLog('consent', consent && consent.status);
+            } catch (consentErr) {
+              adLog('consent_error', String(consentErr && consentErr.message ? consentErr.message : consentErr));
+            }
+
             await AdMob.initialize({
               initializeForTesting: initForTesting,
               testingDevices: qaDevices
@@ -3910,5 +4080,15 @@
       })();
     </script>
 
+    <script>
+        // Offline support on the web/PWA (the native app already ships its files locally).
+        (function () {
+            var native = window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform();
+            if (native || !('serviceWorker' in navigator) || !window.isSecureContext) return;
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('sw.js', { scope: './' }).catch(function () { /* offline cache is optional */ });
+            });
+        })();
+    </script>
 </body>
 </html>
