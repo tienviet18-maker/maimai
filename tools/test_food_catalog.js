@@ -15,24 +15,14 @@ function assert(c, m) {
 }
 
 const foods = JSON.parse(fs.readFileSync(path.join(ROOT, 'www', 'data', 'foods', 'foods.json'), 'utf8'));
-const bak = path.join(ROOT, 'www', 'data', 'foods', 'foods.json.bak_pre_enrich');
-const before = JSON.parse(fs.readFileSync(bak, 'utf8'));
+const { nutritionLock } = require('./relabel_foods_v2.js');
 
-assert(foods.length === before.length, 'record count unchanged (' + foods.length + ')');
 assert(foods.length === 10441, 'expected 10441 records');
 
-// Nutrition integrity vs backup
-let nutrOk = true;
-const beforeMap = new Map(before.map((f) => [f.id, f]));
-for (const f of foods) {
-  const b = beforeMap.get(f.id);
-  if (!b || JSON.stringify(b.nutritionPer100g) !== JSON.stringify(f.nutritionPer100g)) {
-    nutrOk = false;
-    console.error('nutrition drift', f.id);
-    break;
-  }
-}
-assert(nutrOk, 'nutritionPer100g unchanged for all ids');
+// Nutrition + provenance integrity: fingerprint of (id, nutritionPer100g, source, sourceId, sourceVersion)
+// for every row, pinned from the catalog before any label enrichment. Labels may change; numbers may not.
+assert(nutritionLock(foods) === '3ab6c13c8f9759112103bfda4dcde27ab8b27994293220668c862e6c915a31ec',
+  'nutritionPer100g/provenance unchanged for all ids (nutritionLock)');
 
 assert(foods.every((f) => f.provenance && f.provenance.source && f.provenance.sourceId), 'all have provenance source+sourceId');
 assert(foods.every((f) => f.foodKey && f.variantKey && f.nutritionBasis === 'per_100g'), 'all have foodKey/variantKey/basis');
@@ -87,7 +77,8 @@ const nutr = repo.getNutrition(sample.id, 100);
 assert(nutr && Math.round(nutr.energyKcal) === sample.nutritionPer100g.energyKcal, 'getNutrition uses selected record kcal');
 
 const hash = crypto.createHash('sha256').update(fs.readFileSync(path.join(ROOT, 'www', 'data', 'foods', 'foods.json'))).digest('hex');
-assert(hash === '277e958fbc296f5f852d2389bcd5d056b02cabb48a431185873e06f2ea548d32', 'enriched foods.json hash');
+const report = JSON.parse(fs.readFileSync(path.join(ROOT, 'www', 'data', 'foods', 'enrichment_report.json'), 'utf8'));
+assert(hash === report.foodsJsonSha256, 'foods.json hash matches enrichment_report (regenerate with tools/relabel_foods_v2.js)');
 
 // Android index wiring
 const idx = fs.readFileSync(path.join(ROOT, 'www', 'index.html'), 'utf8');
@@ -99,6 +90,7 @@ assert(idx.includes('foodResultSubtitle'), 'UI shows variant subtitle');
 const dbJs = fs.readFileSync(path.join(ROOT, 'www', 'data', 'foods', 'foods_db.js'), 'utf8');
 assert(dbJs.includes('window.FOOD_MASTER'), 'foods_db exports FOOD_MASTER');
 assert(dbJs.includes('Enrichment') || dbJs.includes('enrichment'), 'foods_db notes enrichment');
+assert(dbJs.includes(fs.readFileSync(path.join(ROOT, 'www', 'data', 'foods', 'foods.json'), 'utf8')), 'foods_db.js embeds the same catalog as foods.json');
 
 console.log('\nMETA', {
   records: foods.length,

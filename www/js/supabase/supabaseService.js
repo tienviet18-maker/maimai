@@ -188,7 +188,8 @@
   }
 
   function isoTodayYmd() {
-    return new Date().toISOString().split('T')[0];
+    // device-local calendar date (never UTC toISOString, which shifts the day for UTC+7/+9 users)
+    return toYmdDate(new Date());
   }
 
   function isBadDateInput(v) {
@@ -212,7 +213,7 @@
     try {
       if (!isBadDateInput(root.TODAY_STR)) return String(root.TODAY_STR).trim();
     } catch (e2) { /* ignore */ }
-    // Explicit fallback requested: new Date().toISOString().split('T')[0]
+    // Last-resort fallback: device-local calendar date
     return isoTodayYmd();
   }
 

@@ -1396,10 +1396,18 @@
         const FOOD_CATALOG_PENDING = Array.isArray(window.FOOD_CATALOG_PENDING) ? window.FOOD_CATALOG_PENDING : [];
         let FOOD_SEARCH_INDEX = null;
 
-        /* MAIMAI_TZ_ASIA_TOKYO: calendar dates use Asia/Tokyo; YYYY-MM-DD never UTC-shifted.
+        /* MAIMAI_TZ_DEVICE: calendar dates follow the device time zone (Vietnam users get Asia/Ho_Chi_Minh,
+           Japan users Asia/Tokyo, …); YYYY-MM-DD is never UTC-shifted. Falls back to Asia/Tokyo (the previous
+           fixed zone) only if the runtime cannot report a valid zone. Existing date keys are not rewritten.
            Daily food/calories live in appData.dailyRecords[YYYY-MM-DD] — never wipe history on day change.
            Home/"Hôm nay" reads ONLY today; previous days remain in storage and via Calo ←/→ + calendar. */
-        const MAIMAI_APP_TIMEZONE = 'Asia/Tokyo';
+        const MAIMAI_APP_TIMEZONE = (function resolveAppTimeZone() {
+            try {
+                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                if (tz) { new Intl.DateTimeFormat('en-CA', { timeZone: tz }); return tz; }
+            } catch (e) { /* invalid or missing zone */ }
+            return 'Asia/Tokyo';
+        })();
         function pad2(n) { return String(n).padStart(2, '0'); }
         function normalizeDateKey(raw) {
             const m = String(raw || '').trim().match(/(\d{4})\D(\d{1,2})\D(\d{1,2})/);
@@ -1419,7 +1427,7 @@
                 const norm = normalizeDateKey(raw);
                 if (norm) return norm;
             } catch (e) { /* fall through */ }
-            // Fallback: format via Asia/Tokyo parts (avoid UTC toISOString day shift)
+            // Fallback: format via app time-zone parts (avoid UTC toISOString day shift)
             try {
                 const parts = new Intl.DateTimeFormat('en-US', {
                     timeZone: MAIMAI_APP_TIMEZONE,
@@ -1923,7 +1931,8 @@
             };
         }
 
-        function searchFoods(query) {
+        function searchFoods(query, opts) {
+            opts = opts || {};
             const rawQ = String(query || '').trim();
             const qNorm = normalizeStr(rawQ);
             const qAccent = normalizeKeepDiacritics(rawQ);
@@ -1947,6 +1956,13 @@
             const looksVietnameseQuery = preferAccent || /pho|banh|bun|com|thit|goi|nuoc mam|rau/i.test(qNorm) || /フォー|バインミー|肉|魚|ご飯/.test(rawQ);
             const bareEggQuery = /^(trung|trứng|egg|卵)$/i.test(rawQ.trim()) || /^(trung|egg)$/i.test(qNorm);
 
+            // Multi-word queries also match when every word is present (any order), e.g.
+            // "cơm trắng" → "Cơm, gạo trắng, gạo tẻ". Words ≤3 chars must match a whole word.
+            const wordRe = (w, accent) => new RegExp((accent ? '(?:^|[^\\p{L}\\p{N}])' : '(?:^|[^a-z0-9])') + escapeRe(w) + (w.length <= 3 ? (accent ? '(?:[^\\p{L}\\p{N}]|$)' : '(?:[^a-z0-9]|$)') : ''), accent ? 'u' : '');
+            const qWordsAccent = qAccent.split(/[\s,]+/).filter(Boolean);
+            const qWordsNorm = qNorm.split(/[\s,]+/).filter(Boolean);
+            const qWordReAccent = qWordsAccent.length > 1 ? qWordsAccent.map(w => wordRe(w, true)) : null;
+            const qWordReNorm = qWordsNorm.length > 1 ? qWordsNorm.map(w => wordRe(w, false)) : null;
             const scored = [];
             for (let i = 0; i < FOOD_SEARCH_INDEX.length; i++) {
                 const row = FOOD_SEARCH_INDEX[i];
@@ -1954,9 +1970,11 @@
                 if (preferAccent) {
                     if (row.hayAccent.includes(qAccent)) matched = true;
                     if (accentTokenRe && !accentTokenRe.test(row.hayAccent)) matched = false;
+                    if (!matched && qWordReAccent && qWordReAccent.every(re => re.test(row.hayAccent))) matched = true;
                 } else {
                     if (row.hay.includes(qNorm)) matched = true;
                     if (tokenRe && !tokenRe.test(row.hay)) matched = false;
+                    if (!matched && qWordReNorm && qWordReNorm.every(re => re.test(row.hay))) matched = true;
                 }
                 if (!matched) continue;
                 const f = row.food;
@@ -1979,6 +1997,11 @@
                     else if ((f.aliases || []).some(a => normalizeStr(a) === qNorm)) score += 40;
                     else score += 10;
                 }
+                // Head of the label (text before the first comma) equal to the query: "cam" → "Cam, sống, …"
+                const headA = normalizeKeepDiacritics(String(f.nameVi || '').split(',')[0]);
+                if (headA && (headA === qAccent || normalizeStr(headA) === qNorm)) score += 40;
+                if ((f.aliases || []).some(a => normalizeKeepDiacritics(a) === qAccent || normalizeStr(a) === qNorm)) score += 25;
+                if (f.family === 'egg' && !/trung|egg|卵|たまご|タマゴ/.test(qNorm + ' ' + rawQ)) score -= 50;
                 if (f.cuisine === 'vietnamese') score += looksVietnameseQuery ? 35 : 15;
                 if (f.source === 'MEXT' && /[\u3040-\u30ff\u4e00-\u9faf]/.test(rawQ)) score += 15;
                 if (f.preparation && f.preparation !== 'unspecified') {
@@ -2013,7 +2036,15 @@
                 scored.push({ f, score, foodKey: f.foodKey || f.id });
             }
             scored.sort((a, b) => b.score - a.score || String(a.foodKey).localeCompare(String(b.foodKey)) || String(a.f.nameVi).localeCompare(String(b.f.nameVi)));
-            const masterMatches = scored.slice(0, 40).map(s => s.f);
+            let masterMatches = scored.slice(0, 40).map(s => s.f);
+            // "phở bò" / "bún chả" have no verified row yet: fall back to the base dish/noodle rows
+            // (e.g. "Phở, có thịt", "Bún/bánh phở") instead of an empty list. Never invents a match.
+            const qWords = qAccent.split(/\s+/).filter(Boolean);
+            if (!masterMatches.length && qWords.length > 1 && !opts.relaxed &&
+                /^(phở|pho|bún|bun|cháo|chao|miến|mien|mì|mi|cơm|com|xôi|xoi|canh)$/.test(qWords[0])) {
+                const base = searchFoods(qWords[0], { relaxed: true });
+                return { masterMatches: base.masterMatches, myFoodMatches, relaxedFrom: rawQ };
+            }
             return { masterMatches, myFoodMatches };
         }
 
@@ -3238,7 +3269,7 @@
             const favBtn = document.getElementById('btn-calc-fav');
             if(favBtn) favBtn.innerText = (appData.favorites && appData.favorites.includes(food.id)) ? '❤️' : '🤍';
 
-            const defGram = food.defaultGrams || 150;
+            const defGram = food.defaultGrams || 100; // per-100g basis; no hidden 150 g default
             document.getElementById('calc-gram-input').value = defGram; onGramChange(defGram);
         }
 
