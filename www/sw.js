@@ -20,6 +20,7 @@ var PRECACHE = [
   './js/storage/data_tools.js',
   './js/cycle/cycle_engine.js',
   './js/food/food_repository.js',
+  './js/food/recipe_builder.js',
   './js/nutrition/nutrition_bridge.js',
   './js/notifications/notificationEngine.js',
   './js/supabase/supabaseClient.js',

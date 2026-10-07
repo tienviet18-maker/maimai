@@ -27,6 +27,7 @@
     <script src="js/storage/data_tools.js"></script>
     <script src="js/cycle/cycle_engine.js"></script>
     <script src="js/food/food_repository.js"></script>
+    <script src="js/food/recipe_builder.js"></script>
     <script src="js/nutrition/nutrition_bridge.js"></script>
     <script src="js/notifications/notificationEngine.js"></script>
     <script src="vendor/supabase.js"></script>
@@ -574,12 +575,41 @@
                                 <span class="text-[10px] text-gray-500">(P: <b id="calc-result-p">0</b>g, F: <b id="calc-result-f">0</b>g, C: <b id="calc-result-c">0</b>g)</span>
                             </div>
                             <button onclick="addSelectedFoodToMeal()" class="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-2.5 rounded-xl text-xs shadow-md active:scale-95 transition" data-i18n="addToDiaryBtn">+ Thêm vào nhật ký ✨</button>
+                            <button type="button" id="btn-report-food" onclick="reportFoodIssue()" class="w-full text-[10px] font-bold text-gray-400 hover:text-rose-500" data-i18n="reportFoodIssue">⚠️ Báo sai số liệu</button>
                         </div>
                     </div>
                 </div>
 
                 <!-- DIET SUB 2: TỰ NHẬP MÓN -->
                 <div id="sub-view-custom" class="hidden space-y-4">
+                    <div class="bg-white p-5 rounded-3xl border border-pink-100 space-y-3" id="recipe-builder">
+                        <h4 class="font-bold text-pink-700 text-sm" data-i18n="recipeTitle">🍲 Tạo món từ nguyên liệu</h4>
+                        <p class="text-[10px] text-gray-500 leading-relaxed" data-i18n="recipeHint">Chọn nguyên liệu và nhập khối lượng.</p>
+                        <div>
+                            <label class="text-[10px] font-bold text-pink-500 uppercase" data-i18n="recipeNameLabel">Tên món (*)</label>
+                            <input type="text" id="recipe-name" class="w-full mt-1 bg-pink-50/60 border border-pink-200 text-xs rounded-xl px-3 py-2.5 focus:outline-none">
+                        </div>
+                        <div class="relative">
+                            <input type="text" id="recipe-ingredient-search" oninput="onRecipeIngredientSearch(this.value)" class="w-full bg-pink-50/60 border border-pink-200 text-xs rounded-xl px-3 py-2.5 focus:outline-none">
+                            <div id="recipe-ingredient-results" class="hidden mt-1 bg-white rounded-2xl border border-pink-100 max-h-48 overflow-y-auto divide-y divide-gray-100 shadow-lg"></div>
+                        </div>
+                        <div id="recipe-ingredient-list" class="space-y-1.5"></div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-[10px] font-bold text-gray-500 uppercase"><span data-i18n="recipeCookedLabel">Cân sau khi nấu (g)</span></label>
+                                <input type="number" id="recipe-cooked-weight" oninput="renderRecipeBuilder()" class="w-full mt-1 bg-white border border-pink-200 text-xs rounded-xl px-3 py-2.5 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-gray-500 uppercase" data-i18n="recipeServingLabel">Khẩu phần mặc định (g)</label>
+                                <input type="number" id="recipe-serving" oninput="this.dataset.touched = this.value ? '1' : ''" class="w-full mt-1 bg-white border border-pink-200 text-xs rounded-xl px-3 py-2.5 focus:outline-none">
+                            </div>
+                        </div>
+                        <p id="recipe-summary" class="text-[11px] font-bold text-pink-700 bg-pink-50 rounded-xl px-3 py-2"></p>
+                        <div class="flex gap-2">
+                            <button onclick="saveRecipeFood(false)" class="w-1/2 py-2.5 bg-rose-100 text-rose-700 font-bold rounded-xl text-xs active:scale-95 transition" data-i18n="saveToMyFoodsBtn">Lưu My Foods</button>
+                            <button onclick="saveRecipeFood(true)" class="w-1/2 py-2.5 bg-pink-500 text-white font-bold rounded-xl text-xs active:scale-95 transition" data-i18n="saveAndAddTodayBtn">Lưu & Thêm</button>
+                        </div>
+                    </div>
                     <div class="bg-pink-50/90 p-5 rounded-3xl border border-pink-100 space-y-3">
                         <h4 class="font-bold text-pink-700 text-sm" data-i18n="createFoodTitle">✍️ Tạo món ăn thủ công</h4>
                         <div class="grid grid-cols-2 gap-2">
@@ -1087,6 +1117,23 @@
                 legendOvulationMark: "💗 Ước tính rụng trứng",
                 legendLowerFertilityMark: "🟢 Ít khả năng thụ thai",
                 aboutTitle: "Về MaiMai",
+                recipeTitle: "🍲 Tạo món từ nguyên liệu",
+                recipeHint: "Chọn nguyên liệu đúng trạng thái (sống hoặc đã nấu) và nhập khối lượng. Calo được cộng từ số liệu có nguồn của từng nguyên liệu, không ước đoán.",
+                recipeNameLabel: "Tên món (*)",
+                recipeSearchPlaceholder: "🔍 Thêm nguyên liệu: bánh phở, thịt bò, hành lá...",
+                recipeCookedLabel: "Cân sau khi nấu (g)",
+                recipeServingLabel: "Khẩu phần mặc định (g)",
+                recipeOptional: "không bắt buộc",
+                recipeTotalLine: "{n} nguyên liệu · {g} g · {kcal} kcal · {per} kcal/100g",
+                recipeEmpty: "Chưa có nguyên liệu nào.",
+                recipeNeedName: "Hãy đặt tên món và thêm ít nhất 1 nguyên liệu có số calo.",
+                recipeSaved: "Đã lưu \"{name}\" vào Món của tôi.",
+                recipeSourceLine: "Tính từ {n} nguyên liệu theo công thức của bạn",
+                searchCreateRecipe: "➕ Tạo \"{q}\" từ nguyên liệu",
+                deleteMyFoodConfirm: "Xóa \"{name}\" khỏi Món của tôi? Các bữa đã ghi vẫn giữ nguyên.",
+                reportFoodIssue: "⚠️ Báo sai số liệu",
+                reportFoodSubject: "[MaiMai] Báo sai dữ liệu món {id}",
+                reportFoodBody: "Món: {name}\nMã: {id}\nNguồn: {source} {sourceId}\n\nĐiều chưa đúng:\n",
                 dataPrivacyTitle: "Dữ liệu & Quyền riêng tư",
                 dataPrivacyHint: "Dữ liệu của bạn lưu trên máy này (và bản sao trên máy chủ nếu đồng bộ đang bật). Bạn có thể sao lưu, khôi phục hoặc xóa vĩnh viễn bất cứ lúc nào.",
                 importBtn: "📤 Khôi phục",
@@ -1253,6 +1300,23 @@
                 legendOvulationMark: "💗 推定排卵日",
                 legendLowerFertilityMark: "🟢 妊娠しにくい可能性がある日",
                 aboutTitle: "MaiMaiについて",
+                recipeTitle: "🍲 材料から料理を作成",
+                recipeHint: "材料を状態（生・調理済み）に合わせて選び、重さを入力してください。カロリーは各材料の出典付きデータを合計して計算します（推測はしません）。",
+                recipeNameLabel: "料理名 (*)",
+                recipeSearchPlaceholder: "🔍 材料を追加：米麺、牛肉、ねぎ...",
+                recipeCookedLabel: "調理後の重さ (g)",
+                recipeServingLabel: "標準の量 (g)",
+                recipeOptional: "任意",
+                recipeTotalLine: "材料{n}品 · {g} g · {kcal} kcal · {per} kcal/100g",
+                recipeEmpty: "まだ材料がありません。",
+                recipeNeedName: "料理名を入力し、カロリーのある材料を1つ以上追加してください。",
+                recipeSaved: "「{name}」をマイフードに保存しました。",
+                recipeSourceLine: "あなたのレシピ（材料{n}品）から計算",
+                searchCreateRecipe: "➕「{q}」を材料から作成",
+                deleteMyFoodConfirm: "「{name}」をマイフードから削除しますか？記録済みの食事はそのまま残ります。",
+                reportFoodIssue: "⚠️ データの誤りを報告",
+                reportFoodSubject: "[MaiMai] 食品データの誤り {id}",
+                reportFoodBody: "食品：{name}\nID：{id}\n出典：{source} {sourceId}\n\n誤りの内容：\n",
                 dataPrivacyTitle: "データとプライバシー",
                 dataPrivacyHint: "データはこの端末に保存されます（同期が有効な場合はサーバーにも複製されます）。いつでもバックアップ、復元、完全削除ができます。",
                 importBtn: "📤 復元",
@@ -1419,6 +1483,23 @@
                 legendOvulationMark: "💗 Estimated ovulation",
                 legendLowerFertilityMark: "🟢 Lower-fertility days",
                 aboutTitle: "About MaiMai",
+                recipeTitle: "🍲 Build a dish from ingredients",
+                recipeHint: "Pick each ingredient in the state you use it (raw or cooked) and enter its weight. Calories are added up from each ingredient's sourced data, with no guessing.",
+                recipeNameLabel: "Dish name (*)",
+                recipeSearchPlaceholder: "🔍 Add ingredient: rice noodles, beef, scallion...",
+                recipeCookedLabel: "Weight after cooking (g)",
+                recipeServingLabel: "Default serving (g)",
+                recipeOptional: "optional",
+                recipeTotalLine: "{n} ingredients · {g} g · {kcal} kcal · {per} kcal/100g",
+                recipeEmpty: "No ingredients yet.",
+                recipeNeedName: "Give the dish a name and add at least one ingredient with calories.",
+                recipeSaved: "Saved \"{name}\" to My Foods.",
+                recipeSourceLine: "Calculated from your recipe ({n} ingredients)",
+                searchCreateRecipe: "➕ Build \"{q}\" from ingredients",
+                deleteMyFoodConfirm: "Remove \"{name}\" from My Foods? Meals you already logged stay as they are.",
+                reportFoodIssue: "⚠️ Report a data error",
+                reportFoodSubject: "[MaiMai] Food data error {id}",
+                reportFoodBody: "Food: {name}\nID: {id}\nSource: {source} {sourceId}\n\nWhat is wrong:\n",
                 dataPrivacyTitle: "Data & Privacy",
                 dataPrivacyHint: "Your data is stored on this device (and copied to our server when sync is on). You can back it up, restore it or delete it permanently at any time.",
                 importBtn: "📤 Restore",
@@ -2144,6 +2225,7 @@
             
             if (tab === 'myfoods') renderMyFoodsList();
             if (tab === 'search') renderFavorites();
+            if (tab === 'custom') applyRecipeBuilderI18n();
         }
 
         function toggleFavoriteCurrent() {
@@ -2175,6 +2257,11 @@
                 },
                 createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), favorite: false
             };
+            if (foodData.recipe) {
+                newFood.source = 'user_recipe';
+                newFood.provenanceType = 'calculated';
+                newFood.recipe = foodData.recipe;
+            }
             if (!appData.myFoods) appData.myFoods = [];
             appData.myFoods.unshift(newFood);
             saveState(); return newFood;
@@ -2244,8 +2331,10 @@
                 const kcal = f.nutritionPer100g?.energyKcal ?? '--';
                 return '<div class="bg-white p-3 rounded-2xl border border-pink-100 flex justify-between items-center shadow-sm">' +
                     '<div><p class="font-bold text-xs text-gray-800">🥗 ' + escapeHtml(f.name) + '</p>' +
-                    '<p class="text-[10px] text-gray-400 mt-0.5">' + kcal + ' kcal / 100g · ' + (f.defaultGrams || 100) + 'g</p></div>' +
-                    '<button onclick="selectFoodItem(\'' + f.id + '\', \'user\'); switchSubDietTab(\'search\');" class="px-3 py-1.5 bg-pink-500 text-white text-[10px] font-bold rounded-xl">+</button></div>';
+                    '<p class="text-[10px] text-gray-400 mt-0.5">' + kcal + ' kcal / 100g · ' + (f.defaultGrams || 100) + 'g</p>' +
+                    (f.recipe ? '<p class="text-[9px] text-pink-400 mt-0.5">' + escapeHtml(i18nText('recipeSourceLine', { n: f.recipe.ingredients.length })) + '</p>' : '') + '</div>' +
+                    '<div class="flex gap-1.5 shrink-0"><button onclick="deleteMyFood(\'' + f.id + '\')" class="px-2.5 py-1.5 bg-white border border-rose-200 text-rose-500 text-[10px] font-bold rounded-xl">🗑️</button>' +
+                    '<button onclick="selectFoodItem(\'' + f.id + '\', \'user\'); switchSubDietTab(\'search\');" class="px-3 py-1.5 bg-pink-500 text-white text-[10px] font-bold rounded-xl">+</button></div></div>';
             }).join('');
         }
 
@@ -2301,6 +2390,128 @@
             deleteDailyFoodLog(logId, dateStr);
             renderDietView();
             if (dateStr === TODAY_STR) renderHealthAndHome();
+        }
+
+        // ================= RECIPE BUILDER =================
+        let recipeItems = [];
+
+        function onRecipeIngredientSearch(query) {
+            const box = document.getElementById('recipe-ingredient-results');
+            if (!box) return;
+            if (!String(query || '').trim()) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+            const { masterMatches } = searchFoods(query);
+            box.innerHTML = masterMatches.slice(0, 10).map(f => {
+                const kcal = f.nutritionPer100g && f.nutritionPer100g.energyKcal != null ? f.nutritionPer100g.energyKcal : '--';
+                return `<div onclick="addRecipeIngredient('${f.id}')" class="p-2.5 hover:bg-pink-50 cursor-pointer flex justify-between items-center gap-2"><div class="min-w-0"><p class="text-xs font-bold text-gray-800 truncate">${escapeHtml(foodDisplayName(f))}</p><p class="text-[9px] text-gray-400 truncate">${escapeHtml(foodResultSubtitle(f))}</p></div><span class="text-[10px] font-bold text-orange-500 shrink-0">${kcal} kcal</span></div>`;
+            }).join('') || `<div class="p-2.5 text-[11px] text-gray-400 text-center">${escapeHtml(currentLang === 'ja' ? '見つかりません' : currentLang === 'en' ? 'No foods found' : 'Không tìm thấy món')}</div>`;
+            box.classList.remove('hidden');
+        }
+
+        function addRecipeIngredient(id) {
+            const food = FOOD_MASTER.find(f => f.id === id);
+            if (!food) return;
+            recipeItems.push({ food: food, grams: food.defaultGrams || 100 });
+            const input = document.getElementById('recipe-ingredient-search');
+            if (input) input.value = '';
+            onRecipeIngredientSearch('');
+            renderRecipeBuilder();
+        }
+
+        function setRecipeIngredientGrams(idx, value) {
+            if (!recipeItems[idx]) return;
+            recipeItems[idx].grams = Math.max(0, Number(value) || 0);
+            renderRecipeBuilder(true);
+        }
+
+        function removeRecipeIngredient(idx) {
+            recipeItems.splice(idx, 1);
+            renderRecipeBuilder();
+        }
+
+        function renderRecipeBuilder(keepList) {
+            const list = document.getElementById('recipe-ingredient-list');
+            if (list && !keepList) {
+                list.innerHTML = recipeItems.length === 0
+                    ? `<p class="text-[11px] text-gray-400 text-center py-1">${escapeHtml(i18nText('recipeEmpty'))}</p>`
+                    : recipeItems.map((it, i) => `<div class="flex items-center gap-2 bg-pink-50/50 rounded-xl px-2.5 py-1.5"><p class="flex-1 min-w-0 text-[11px] font-bold text-gray-700 truncate">${escapeHtml(foodDisplayName(it.food))}</p><input type="number" min="0" value="${it.grams}" oninput="setRecipeIngredientGrams(${i}, this.value)" class="w-16 bg-white border border-pink-200 text-xs font-bold text-pink-600 rounded-lg px-2 py-1 text-center focus:outline-none"><span class="text-[10px] text-gray-400">g</span><button type="button" onclick="removeRecipeIngredient(${i})" class="text-rose-400 text-sm px-1">✕</button></div>`).join('');
+            }
+            const cooked = Number(document.getElementById('recipe-cooked-weight')?.value) || 0;
+            const res = MaiMaiRecipe.computeRecipe(recipeItems, cooked);
+            const summary = document.getElementById('recipe-summary');
+            if (summary) {
+                summary.innerText = res.ingredientCount === 0 ? '' : i18nText('recipeTotalLine', {
+                    n: res.ingredientCount, g: res.finalGrams,
+                    kcal: res.totals.energyKcal == null ? '--' : res.totals.energyKcal,
+                    per: res.per100g.energyKcal == null ? '--' : res.per100g.energyKcal
+                });
+                summary.classList.toggle('hidden', res.ingredientCount === 0);
+            }
+            const serving = document.getElementById('recipe-serving');
+            if (serving && !serving.dataset.touched) serving.placeholder = res.finalGrams ? String(res.finalGrams) : '';
+            return res;
+        }
+
+        function startRecipeFromSearch() {
+            const q = (document.getElementById('food-search-input')?.value || '').trim();
+            switchSubDietTab('custom');
+            const name = document.getElementById('recipe-name');
+            if (name && q && !name.value) name.value = q;
+            document.getElementById('recipe-builder')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            document.getElementById('recipe-ingredient-search')?.focus();
+        }
+
+        function saveRecipeFood(addToday) {
+            const name = (document.getElementById('recipe-name')?.value || '').trim();
+            const cooked = Number(document.getElementById('recipe-cooked-weight')?.value) || 0;
+            const res = MaiMaiRecipe.computeRecipe(recipeItems, cooked);
+            if (!name || !res.ok) { alert(i18nText('recipeNeedName')); return; }
+            const servingGrams = Number(document.getElementById('recipe-serving')?.value) || res.finalGrams || 100;
+            const n = res.per100g;
+            const newFood = createMyFood({
+                name: name, defaultGrams: servingGrams, energyKcal: n.energyKcal,
+                protein: n.protein == null ? '' : n.protein, fat: n.fat == null ? '' : n.fat,
+                carbohydrate: n.carbohydrate == null ? '' : n.carbohydrate, fiber: n.fiber == null ? '' : n.fiber,
+                sodium: n.sodium == null ? '' : n.sodium,
+                recipe: MaiMaiRecipe.recipeRecord(recipeItems, cooked)
+            });
+            if (addToday) {
+                const meal = document.getElementById('custom-food-meal')?.value || 'Trưa';
+                addFoodToDailyLog(newFood, servingGrams, meal, getLocalDateStr(dietViewDate));
+                renderHealthAndHome();
+            }
+            recipeItems = [];
+            ['recipe-name', 'recipe-cooked-weight', 'recipe-serving'].forEach(id => { const el = document.getElementById(id); if (el) { el.value = ''; delete el.dataset.touched; } });
+            renderRecipeBuilder();
+            renderMyFoodsList();
+            alert(i18nText('recipeSaved', { name: name }));
+        }
+
+        function deleteMyFood(id) {
+            const food = (appData.myFoods || []).find(f => f.id === id);
+            if (!food || !confirm(i18nText('deleteMyFoodConfirm', { name: food.name }))) return;
+            appData.myFoods = appData.myFoods.filter(f => f.id !== id);
+            if (Array.isArray(appData.favorites)) appData.favorites = appData.favorites.filter(f => f !== id);
+            saveState();
+            renderMyFoodsList();
+            if (typeof renderFavorites === 'function') renderFavorites();
+        }
+
+        function reportFoodIssue() {
+            if (!currentSelectedFood) return;
+            const f = currentSelectedFood.item;
+            const vars = { id: f.id, name: foodDisplayName(f), source: f.source || '', sourceId: f.sourceId || '' };
+            const href = 'mailto:' + APP_CONFIG.supportEmail + '?subject=' + encodeURIComponent(i18nText('reportFoodSubject', vars)) + '&body=' + encodeURIComponent(i18nText('reportFoodBody', vars));
+            const a = document.createElement('a');
+            a.href = href; a.rel = 'noopener'; a.style.display = 'none';
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        }
+
+        function applyRecipeBuilderI18n() {
+            const ph = document.getElementById('recipe-ingredient-search');
+            if (ph) ph.placeholder = i18nText('recipeSearchPlaceholder');
+            const cooked = document.getElementById('recipe-cooked-weight');
+            if (cooked) cooked.placeholder = i18nText('recipeOptional');
+            renderRecipeBuilder();
         }
 
         // ================= DATA & PRIVACY =================
@@ -2812,6 +3023,7 @@
         function setLanguage(lang) {
             currentLang = lang; appData.profile.lang = lang; saveState();
             document.querySelectorAll('[data-i18n]').forEach(el => { const key = el.getAttribute('data-i18n'); if (I18N[lang] && I18N[lang][key] != null) el.innerText = I18N[lang][key]; });
+            if (typeof applyRecipeBuilderI18n === 'function') applyRecipeBuilderI18n();
             ['vi', 'ja', 'en'].forEach(l => { const btn = document.getElementById(`btn-lang-${l}`); if (btn) { if (l === lang) btn.classList.add('active'); else btn.classList.remove('active'); } });
             const headerSelect = document.getElementById('header-lang-select'); if (headerSelect) headerSelect.value = lang;
             const brandTitle = document.getElementById('author-brand-title');
@@ -3364,7 +3576,8 @@
             const { masterMatches, myFoodMatches } = searchFoods(query); resultsBox.innerHTML = '';
             if (masterMatches.length === 0 && myFoodMatches.length === 0) {
                 const emptyMsg = currentLang === 'ja' ? '見つかりません' : currentLang === 'en' ? 'No foods found' : 'Không tìm thấy món';
-                resultsBox.innerHTML = `<div class="p-3 text-xs text-gray-400 text-center">${emptyMsg} "${escapeHtml(query)}".</div>`;
+                resultsBox.innerHTML = `<div class="p-3 text-xs text-gray-400 text-center">${emptyMsg} "${escapeHtml(query)}".</div>` +
+                    `<button type="button" onclick="startRecipeFromSearch()" class="w-full p-3 text-xs font-bold text-pink-600 hover:bg-pink-50">${escapeHtml(i18nText('searchCreateRecipe', { q: query.trim() }))}</button>`;
                 resultsBox.classList.remove('hidden');
                 return;
             }
@@ -3411,7 +3624,9 @@
             const srcEl = document.getElementById('calc-food-source');
             if (srcEl) {
                 const prep = foodResultSubtitle(food);
-                srcEl.innerText = prep || food.source || (type === 'user' ? 'user' : 'master');
+                srcEl.innerText = food.recipe
+                    ? i18nText('recipeSourceLine', { n: food.recipe.ingredients.length })
+                    : (prep || food.source || (type === 'user' ? 'user' : 'master'));
             }
             const n = food.nutritionPer100g || {};
             const setRef = (eid, val) => { const el = document.getElementById(eid); if (el) el.innerText = (val == null ? '--' : val); };
