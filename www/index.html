@@ -3879,5 +3879,98 @@
       })();
     </script>
 
+  <!-- In-app browser notice (same text/behaviour as vimai.jp InAppBrowserNotice):
+       Zalo/Facebook/Messenger webviews cannot add to home screen or pay reliably. -->
+  <style>
+    #inapp-notice {
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      top: calc(12px + env(safe-area-inset-top, 0px));
+      z-index: 10000;
+      max-width: 576px;
+      margin: 0 auto;
+      box-sizing: border-box;
+      padding: 16px;
+      border: 1px solid #FCD34D;
+      border-radius: 12px;
+      background: #FFFBEB;
+      color: #1E293B;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    #inapp-notice p { margin: 0; }
+    #inapp-notice .inapp-title { padding-right: 24px; font-weight: 600; }
+    #inapp-notice .inapp-body { margin-top: 4px; }
+    #inapp-notice .inapp-actions { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
+    #inapp-notice button, #inapp-notice a { font: inherit; cursor: pointer; }
+    #inapp-notice .inapp-close {
+      position: absolute; top: 8px; right: 8px; padding: 4px 8px;
+      border: 0; border-radius: 6px; background: transparent; color: #475569; font-size: 18px; line-height: 1;
+    }
+    #inapp-notice .inapp-copy {
+      min-height: 36px; padding: 0 12px; border: 1px solid #FBBF24; border-radius: 8px;
+      background: #FFFFFF; color: #1E293B; font-weight: 500;
+    }
+    #inapp-notice .inapp-chrome {
+      display: inline-flex; align-items: center; min-height: 36px; padding: 0 12px;
+      border-radius: 8px; background: #0F172A; color: #FFFFFF; font-weight: 500; text-decoration: none;
+    }
+  </style>
+  <script>
+    (function () {
+      var ua = navigator.userAgent || '';
+      if (!/FBAN|FBAV|FB_IAB|Instagram|Zalo|Line\/|TikTok|musical_ly|BytedanceWebview/i.test(ua)) return;
+      var KEY = 'vimai:inapp-notice-dismissed';
+      try { if (sessionStorage.getItem(KEY) === '1') return; } catch (e) {}
+
+      function show() {
+        var box = document.createElement('div');
+        box.id = 'inapp-notice';
+        box.setAttribute('role', 'status');
+        box.innerHTML =
+          '<button type="button" class="inapp-close" aria-label="Đóng">&#x2715;</button>' +
+          '<p class="inapp-title">Bạn đang mở trong ứng dụng Zalo/Facebook</p>' +
+          '<p class="inapp-body">Bấm nút ⋯ rồi chọn “Mở bằng trình duyệt” (Safari/Chrome) để thêm app ra màn hình chính và thanh toán.</p>' +
+          '<div class="inapp-actions"><button type="button" class="inapp-copy">Sao chép link</button></div>';
+        var actions = box.querySelector('.inapp-actions');
+        if (/Android/i.test(ua)) {
+          var l = window.location;
+          var chrome = document.createElement('a');
+          chrome.className = 'inapp-chrome';
+          chrome.href = 'intent://' + l.host + l.pathname + l.search + '#Intent;scheme=https;package=com.android.chrome;end';
+          chrome.textContent = 'Chrome';
+          actions.appendChild(chrome);
+        }
+        box.querySelector('.inapp-close').addEventListener('click', function () {
+          box.parentNode && box.parentNode.removeChild(box);
+          try { sessionStorage.setItem(KEY, '1'); } catch (e) {}
+        });
+        var copyBtn = box.querySelector('.inapp-copy');
+        copyBtn.addEventListener('click', function () {
+          var url = window.location.href;
+          function done() { copyBtn.textContent = 'Đã sao chép'; }
+          function fallback() {
+            var input = document.createElement('input');
+            input.value = url;
+            document.body.appendChild(input);
+            input.select();
+            try { document.execCommand('copy'); } catch (e) {}
+            input.parentNode.removeChild(input);
+            done();
+          }
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(url).then(done, fallback);
+          } else {
+            fallback();
+          }
+        });
+        document.body.appendChild(box);
+      }
+      if (document.body) show(); else document.addEventListener('DOMContentLoaded', show);
+    })();
+  </script>
 </body>
 </html>
