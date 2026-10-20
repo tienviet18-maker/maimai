@@ -21,6 +21,7 @@
 
     <script src="vendor/chart.umd.min.js"></script>
     <script src="data/foods/foods_db.js"></script>
+    <script src="data/foods/foods_ifct.js"></script>
     <script src="energy_engine.js"></script>
     <script src="js/core/architecture.js"></script>
     <script src="js/storage/schema.js"></script>
@@ -502,7 +503,7 @@
                             <div class="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
                                 <div id="calo-eaten-bar" class="bg-orange-400 h-full" style="width: 0%"></div>
                             </div>
-                            <p class="text-[10px] text-gray-400 font-medium" data-i18n="dietStandardsNote">Verified MEXT & USDA Standards</p>
+                            <p class="text-[10px] text-gray-400 font-medium" data-i18n="dietStandardsNote">Verified MEXT, USDA &amp; IFCT data</p>
                             <div id="energy-plan-summary" class="mt-2 p-2.5 rounded-2xl bg-pink-50/80 border border-pink-100 text-[10px] text-gray-600 space-y-0.5 leading-relaxed">
                                 <p><span data-i18n="bmrLabel">BMR</span>: <b id="energy-bmr-text">--</b> kcal</p>
                                 <p><span data-i18n="activityLabel">Vận động</span>: <b id="energy-activity-text">--</b></p>
@@ -996,7 +997,7 @@
                 msgGoalDirectionMaintainMismatch: "Mục tiêu duy trì nên gần với cân hiện tại (±2 kg).",
                 bmiUnitHint: "BMI (không phải kg)",
                 bmrLabel: "BMR", tdeeEstimateLabel: "TDEE ước tính", adjustmentLabel: "Điều chỉnh", dailyTargetLabel: "Mục tiêu ngày",
-                dietStandardsNote: "Verified MEXT & USDA Standards",
+                dietStandardsNote: "Dữ liệu chuẩn MEXT, USDA & IFCT",
                 energyWarnUnderweightLose: "BMI đang thấp — giảm cân không được khuyến nghị mặc định. Hãy cân nhắc duy trì hoặc tăng cân nhẹ.",
                 energyWarnLowCalo: "Mức calo ngày đã được giới hạn an toàn theo ước tính cá nhân.",
                 energyWarnUnderage: "Công thức người lớn — với người dưới 18 tuổi chỉ mang tính tham khảo wellness.",
@@ -1179,7 +1180,7 @@
                 msgGoalDirectionMaintainMismatch: "維持目標では、目標体重を現在の体重の近く（±2kg）にしてください。",
                 bmiUnitHint: "BMI（kgではありません）",
                 bmrLabel: "BMR", tdeeEstimateLabel: "推定TDEE", adjustmentLabel: "調整", dailyTargetLabel: "1日の目標",
-                dietStandardsNote: "Verified MEXT & USDA Standards",
+                dietStandardsNote: "MEXT・USDA・IFCT 公的データ",
                 energyWarnUnderweightLose: "BMIが低めです。減量は既定では推奨しません。維持や緩やかな増量を検討してください。",
                 energyWarnLowCalo: "1日のカロリーは個人推定に基づき安全側に制限されています。",
                 energyWarnUnderage: "成人向け計算式です。18歳未満はウェルネス参考値として扱ってください。",
@@ -1362,7 +1363,7 @@
                 msgGoalDirectionMaintainMismatch: "For Maintain, target weight should be near current weight (±2 kg).",
                 bmiUnitHint: "BMI (not kg)",
                 bmrLabel: "BMR", tdeeEstimateLabel: "Estimated TDEE", adjustmentLabel: "Adjustment", dailyTargetLabel: "Daily target",
-                dietStandardsNote: "Verified MEXT & USDA Standards",
+                dietStandardsNote: "Verified MEXT, USDA & IFCT data",
                 energyWarnUnderweightLose: "BMI is low — weight loss is not the default recommendation. Consider maintain or gentle gain.",
                 energyWarnLowCalo: "Daily calories were clamped using a personal relative safety floor.",
                 energyWarnUnderage: "Adult formula — for under 18 this is wellness guidance only.",
@@ -1553,7 +1554,7 @@
             }
         };
 
-        // Verified standard foods loaded from data/foods/foods_db.js (MEXT + USDA SR Legacy + FNDDS)
+        // Verified standard foods loaded from data/foods/foods_db.js (MEXT + USDA SR Legacy + FNDDS) plus data/foods/foods_ifct.js (IFCT 2017 tropical staples)
         let FOOD_MASTER = Array.isArray(window.FOOD_MASTER) ? window.FOOD_MASTER : [];
         const FOOD_CATALOG_PENDING = Array.isArray(window.FOOD_CATALOG_PENDING) ? window.FOOD_CATALOG_PENDING : [];
         let FOOD_SEARCH_INDEX = null;

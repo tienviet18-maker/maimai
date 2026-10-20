@@ -348,10 +348,10 @@ function main() {
     preparationCounts: next.reduce((m, f) => { m[f.preparation] = (m[f.preparation] || 0) + 1; return m; }, {}),
     canonicalFoodKeys: new Set(next.map((f) => f.foodKey)).size,
     variantKeys: new Set(next.map((f) => f.variantKey)).size,
-    notes: (prevReport.notes || []).concat([
+    notes: Array.from(new Set((prevReport.notes || []).concat([
       'v2: labels rebuilt from source names via tools/food_labels glossaries; nutritionPer100g/provenance byte-identical (nutritionLock).',
       'v2: rows without a reviewed Vietnamese label show the source name (nameViStatus source_ja/source_en) instead of a guessed one.'
-    ])
+    ])))
   });
   delete report.afterHash; delete report.beforeHash;
 
@@ -372,4 +372,4 @@ function main() {
 }
 
 if (require.main === module) main();
-module.exports = { relabel, viNameMext, viNameUsda, detectPrepJa, detectPrepEn, tokenizeJa, nutritionLock };
+module.exports = { relabel, viNameMext, viNameUsda, detectPrepJa, detectPrepEn, tokenizeJa, nutritionLock, PREP_LABELS, slug };

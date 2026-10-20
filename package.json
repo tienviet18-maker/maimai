@@ -6,6 +6,7 @@
   "scripts": {
     "test": "node tools/run_tests.js",
     "relabel:foods": "node tools/relabel_foods_v2.js",
+    "import:ifct": "node tools/import_ifct2017.js",
     "build": "node tools/build_web.js",
     "build:web": "node tools/build_web.js",
     "build:pages": "node tools/build_web.js",

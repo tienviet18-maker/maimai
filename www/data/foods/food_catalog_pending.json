@@ -195,24 +195,37 @@
   },
   {
     "id": "pending_vn_028",
-    "status": "pending_source",
+    "status": "resolved",
     "nameVi": "Rau muống",
     "nameEn": "Water spinach / morning glory",
-    "reason": "Not found as named item in downloaded USDA/MEXT sets"
+    "reason": "Covered by sourced rows (MEXT / USDA SR / IFCT 2017)",
+    "resolvedBy": [
+      "mext_06298",
+      "mext_06299"
+    ]
   },
   {
     "id": "pending_vn_029",
-    "status": "pending_source",
+    "status": "resolved",
     "nameVi": "Mồng tơi",
     "nameEn": "Malabar spinach",
-    "reason": "No verified nutrition source found"
+    "reason": "Covered by sourced rows (MEXT / USDA SR / IFCT 2017)",
+    "resolvedBy": [
+      "ifct_c007",
+      "usda_sr_170474"
+    ]
   },
   {
     "id": "pending_vn_030",
-    "status": "pending_source",
+    "status": "resolved",
     "nameVi": "Rau dền",
     "nameEn": "Amaranth greens",
-    "reason": "No verified nutrition source found"
+    "reason": "Covered by sourced rows (MEXT / USDA SR / IFCT 2017)",
+    "resolvedBy": [
+      "ifct_c002",
+      "ifct_c003",
+      "usda_sr_168385"
+    ]
   },
   {
     "id": "pending_vn_031",
@@ -223,10 +236,13 @@
   },
   {
     "id": "pending_vn_032",
-    "status": "pending_source",
+    "status": "resolved",
     "nameVi": "Nước mía",
     "nameEn": "Sugarcane juice",
-    "reason": "No verified nutrition source found"
+    "reason": "Covered by sourced rows (MEXT / USDA SR / IFCT 2017)",
+    "resolvedBy": [
+      "ifct_i002"
+    ]
   },
   {
     "id": "pending_vn_033",

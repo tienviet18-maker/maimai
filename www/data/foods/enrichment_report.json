@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-10-02T15:33:31.478Z",
+  "generatedAt": "2026-10-20T16:01:02.151Z",
   "totalVerified": 10441,
   "searchPrimary": 10376,
   "demotedDuplicates": 65,
   "duplicateExtraRecords": 65,
   "multiSourceGroups": 7,
-  "canonicalFoodKeys": 9613,
-  "variantKeys": 10302,
+  "canonicalFoodKeys": 9614,
+  "variantKeys": 10297,
   "withProvenance": 10441,
   "vietnameseCuisineTagged": 133,
   "vietnamesePending": 33,
@@ -34,16 +34,12 @@
     "Vietnamese Food Composition Table 2017 remains print-only; pending list unchanged (no invented macros).",
     "Multilingual display names improved from source nameJa/nameEn preparation cues.",
     "v2: labels rebuilt from source names via tools/food_labels glossaries; nutritionPer100g/provenance byte-identical (nutritionLock).",
-    "v2: rows without a reviewed Vietnamese label show the source name (nameViStatus source_ja/source_en) instead of a guessed one.",
-    "v2: labels rebuilt from source names via tools/food_labels glossaries; nutritionPer100g/provenance byte-identical (nutritionLock).",
-    "v2: rows without a reviewed Vietnamese label show the source name (nameViStatus source_ja/source_en) instead of a guessed one.",
-    "v2: labels rebuilt from source names via tools/food_labels glossaries; nutritionPer100g/provenance byte-identical (nutritionLock).",
     "v2: rows without a reviewed Vietnamese label show the source name (nameViStatus source_ja/source_en) instead of a guessed one."
   ],
   "nutritionLock": "3ab6c13c8f9759112103bfda4dcde27ab8b27994293220668c862e6c915a31ec",
-  "nameViGlossary": 7790,
+  "nameViGlossary": 8426,
   "nameViSourceJa": 0,
-  "nameViSourceEn": 2651,
+  "nameViSourceEn": 2015,
   "preparationCounts": {
     "raw": 2197,
     "unspecified": 4741,
@@ -64,5 +60,5 @@
     "braised": 321,
     "scrambled": 3
   },
-  "foodsJsonSha256": "8baadcccb81a777bbb48b330d7ecc4fbb52079219dedc0d0c58bc2004aea6dcc"
+  "foodsJsonSha256": "0aeda2bbe0d59f2e3697a8bf0efa7972f5e6b38a9637ed90f573fc9486e7ddf0"
 }
