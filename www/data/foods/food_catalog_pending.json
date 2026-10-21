@@ -1,48 +1,66 @@
 [
   {
     "id": "pending_vn_001",
-    "status": "pending_source",
+    "status": "recipe_estimate",
     "nameVi": "Phở gà",
     "nameEn": "Chicken pho",
     "nameJa": "フォー・ガー",
-    "reason": "No exact verified FNDDS/MEXT row for chicken pho (only Soup, pho, with meat)"
+    "reason": "No measured source; calculated from a standard recipe of sourced ingredients (tools/food_recipes/vn_recipes.js)",
+    "resolvedBy": [
+      "recipe_vn_pho_ga"
+    ]
   },
   {
     "id": "pending_vn_002",
-    "status": "pending_source",
+    "status": "recipe_estimate",
     "nameVi": "Bún bò Huế",
     "nameEn": "Bun bo Hue",
     "nameJa": "ブン・ボー",
-    "reason": "No verified nutrition source in MEXT/USDA downloads"
+    "reason": "No measured source; calculated from a standard recipe of sourced ingredients (tools/food_recipes/vn_recipes.js)",
+    "resolvedBy": [
+      "recipe_vn_bun_bo_hue"
+    ]
   },
   {
     "id": "pending_vn_003",
-    "status": "pending_source",
+    "status": "recipe_estimate",
     "nameVi": "Bún chả",
     "nameEn": "Bun cha",
     "nameJa": "ブンチャー",
-    "reason": "No verified nutrition source found"
+    "reason": "No measured source; calculated from a standard recipe of sourced ingredients (tools/food_recipes/vn_recipes.js)",
+    "resolvedBy": [
+      "recipe_vn_bun_cha"
+    ]
   },
   {
     "id": "pending_vn_004",
-    "status": "pending_source",
+    "status": "recipe_estimate",
     "nameVi": "Bún riêu",
     "nameEn": "Bun rieu",
-    "reason": "No verified nutrition source found"
+    "reason": "No measured source; calculated from a standard recipe of sourced ingredients (tools/food_recipes/vn_recipes.js)",
+    "resolvedBy": [
+      "recipe_vn_bun_rieu_cua"
+    ]
   },
   {
     "id": "pending_vn_005",
-    "status": "pending_source",
+    "status": "recipe_estimate",
     "nameVi": "Bún thịt nướng",
     "nameEn": "Vermicelli with grilled pork",
-    "reason": "No verified nutrition source found"
+    "reason": "No measured source; calculated from a standard recipe of sourced ingredients (tools/food_recipes/vn_recipes.js)",
+    "resolvedBy": [
+      "recipe_vn_bun_thit_nuong"
+    ]
   },
   {
     "id": "pending_vn_006",
-    "status": "pending_source",
+    "status": "recipe_estimate",
     "nameVi": "Hủ tiếu",
     "nameEn": "Hu tieu noodle soup",
-    "reason": "No verified nutrition source found"
+    "reason": "No measured source; calculated from a standard recipe of sourced ingredients (tools/food_recipes/vn_recipes.js)",
+    "resolvedBy": [
+      "recipe_vn_hu_tieu_nam_vang"
+    ]
   },
   {
     "id": "pending_vn_007",
@@ -67,26 +85,35 @@
   },
   {
     "id": "pending_vn_010",
-    "status": "pending_source",
+    "status": "recipe_estimate",
     "nameVi": "Bánh mì thịt",
     "nameEn": "Vietnamese baguette sandwich with meat",
     "nameJa": "バインミー",
-    "reason": "No verified USDA/FNDDS sandwich row matching bánh mì thịt"
+    "reason": "No measured source; calculated from a standard recipe of sourced ingredients (tools/food_recipes/vn_recipes.js)",
+    "resolvedBy": [
+      "recipe_vn_banh_mi_thit"
+    ]
   },
   {
     "id": "pending_vn_011",
-    "status": "pending_source",
+    "status": "recipe_estimate",
     "nameVi": "Bánh mì trứng",
     "nameEn": "Vietnamese egg baguette",
-    "reason": "No verified nutrition source found"
+    "reason": "No measured source; calculated from a standard recipe of sourced ingredients (tools/food_recipes/vn_recipes.js)",
+    "resolvedBy": [
+      "recipe_vn_banh_mi_trung"
+    ]
   },
   {
     "id": "pending_vn_012",
-    "status": "pending_source",
+    "status": "recipe_estimate",
     "nameVi": "Gỏi cuốn",
     "nameEn": "Fresh spring roll (goi cuon)",
     "nameJa": "生春巻き",
-    "reason": "USDA has fried egg rolls; fresh goi cuon not in downloaded verified sets"
+    "reason": "No measured source; calculated from a standard recipe of sourced ingredients (tools/food_recipes/vn_recipes.js)",
+    "resolvedBy": [
+      "recipe_vn_goi_cuon"
+    ]
   },
   {
     "id": "pending_vn_013",
@@ -97,10 +124,13 @@
   },
   {
     "id": "pending_vn_014",
-    "status": "pending_source",
+    "status": "recipe_estimate",
     "nameVi": "Bánh cuốn",
     "nameEn": "Steamed rice rolls",
-    "reason": "No verified nutrition source found"
+    "reason": "No measured source; calculated from a standard recipe of sourced ingredients (tools/food_recipes/vn_recipes.js)",
+    "resolvedBy": [
+      "recipe_vn_banh_cuon"
+    ]
   },
   {
     "id": "pending_vn_015",
@@ -139,17 +169,23 @@
   },
   {
     "id": "pending_vn_020",
-    "status": "pending_source",
+    "status": "recipe_estimate",
     "nameVi": "Cơm tấm",
     "nameEn": "Broken rice plate",
-    "reason": "No verified nutrition source found"
+    "reason": "No measured source; calculated from a standard recipe of sourced ingredients (tools/food_recipes/vn_recipes.js)",
+    "resolvedBy": [
+      "recipe_vn_com_tam_suon"
+    ]
   },
   {
     "id": "pending_vn_021",
-    "status": "pending_source",
+    "status": "recipe_estimate",
     "nameVi": "Cháo gà",
     "nameEn": "Chicken congee",
-    "reason": "Generic congee exists; chicken cháo not verified as separate row"
+    "reason": "No measured source; calculated from a standard recipe of sourced ingredients (tools/food_recipes/vn_recipes.js)",
+    "resolvedBy": [
+      "recipe_vn_chao_ga"
+    ]
   },
   {
     "id": "pending_vn_022",
@@ -160,10 +196,13 @@
   },
   {
     "id": "pending_vn_023",
-    "status": "pending_source",
+    "status": "recipe_estimate",
     "nameVi": "Thịt kho trứng",
     "nameEn": "Caramelized pork and egg",
-    "reason": "No verified nutrition source found"
+    "reason": "No measured source; calculated from a standard recipe of sourced ingredients (tools/food_recipes/vn_recipes.js)",
+    "resolvedBy": [
+      "recipe_vn_thit_kho_trung"
+    ]
   },
   {
     "id": "pending_vn_024",
@@ -174,59 +213,87 @@
   },
   {
     "id": "pending_vn_025",
-    "status": "pending_source",
+    "status": "recipe_estimate",
     "nameVi": "Bò kho",
     "nameEn": "Vietnamese beef stew",
-    "reason": "No verified nutrition source found"
+    "reason": "No measured source; calculated from a standard recipe of sourced ingredients (tools/food_recipes/vn_recipes.js)",
+    "resolvedBy": [
+      "recipe_vn_bo_kho"
+    ]
   },
   {
     "id": "pending_vn_026",
-    "status": "pending_source",
+    "status": "recipe_estimate",
     "nameVi": "Bò lúc lắc",
     "nameEn": "Shaking beef",
-    "reason": "No verified nutrition source found"
+    "reason": "No measured source; calculated from a standard recipe of sourced ingredients (tools/food_recipes/vn_recipes.js)",
+    "resolvedBy": [
+      "recipe_vn_bo_luc_lac"
+    ]
   },
   {
     "id": "pending_vn_027",
-    "status": "pending_source",
+    "status": "recipe_estimate",
     "nameVi": "Cá kho tộ",
     "nameEn": "Clay-pot caramelized fish",
-    "reason": "No verified nutrition source found"
+    "reason": "No measured source; calculated from a standard recipe of sourced ingredients (tools/food_recipes/vn_recipes.js)",
+    "resolvedBy": [
+      "recipe_vn_ca_kho_to"
+    ]
   },
   {
     "id": "pending_vn_028",
-    "status": "pending_source",
+    "status": "resolved",
     "nameVi": "Rau muống",
     "nameEn": "Water spinach / morning glory",
-    "reason": "Not found as named item in downloaded USDA/MEXT sets"
+    "reason": "Covered by sourced rows (MEXT / USDA SR / IFCT 2017)",
+    "resolvedBy": [
+      "mext_06298",
+      "mext_06299"
+    ]
   },
   {
     "id": "pending_vn_029",
-    "status": "pending_source",
+    "status": "resolved",
     "nameVi": "Mồng tơi",
     "nameEn": "Malabar spinach",
-    "reason": "No verified nutrition source found"
+    "reason": "Covered by sourced rows (MEXT / USDA SR / IFCT 2017)",
+    "resolvedBy": [
+      "ifct_c007",
+      "usda_sr_170474"
+    ]
   },
   {
     "id": "pending_vn_030",
-    "status": "pending_source",
+    "status": "resolved",
     "nameVi": "Rau dền",
     "nameEn": "Amaranth greens",
-    "reason": "No verified nutrition source found"
+    "reason": "Covered by sourced rows (MEXT / USDA SR / IFCT 2017)",
+    "resolvedBy": [
+      "ifct_c002",
+      "ifct_c003",
+      "usda_sr_168385"
+    ]
   },
   {
     "id": "pending_vn_031",
-    "status": "pending_source",
+    "status": "recipe_estimate",
     "nameVi": "Cà phê sữa đá",
     "nameEn": "Vietnamese iced milk coffee",
-    "reason": "No verified nutrition source found"
+    "reason": "No measured source; calculated from a standard recipe of sourced ingredients (tools/food_recipes/vn_recipes.js)",
+    "resolvedBy": [
+      "recipe_vn_ca_phe_sua_da"
+    ]
   },
   {
     "id": "pending_vn_032",
-    "status": "pending_source",
+    "status": "resolved",
     "nameVi": "Nước mía",
     "nameEn": "Sugarcane juice",
-    "reason": "No verified nutrition source found"
+    "reason": "Covered by sourced rows (MEXT / USDA SR / IFCT 2017)",
+    "resolvedBy": [
+      "ifct_i002"
+    ]
   },
   {
     "id": "pending_vn_033",

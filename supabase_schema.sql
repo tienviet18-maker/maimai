@@ -283,3 +283,25 @@ end $$;
 -- from information_schema.columns
 -- where table_schema = 'public' and table_name = 'daily_metrics'
 -- order by ordinal_position;
+
+-- ---------------------------------------------------------------------------
+-- In-app "Delete all data": lets a signed-in (anonymous) user remove their own
+-- auth account. public.users rows cascade from auth.users. Safe to re-run.
+-- ---------------------------------------------------------------------------
+create or replace function public.delete_my_account()
+returns void
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+begin
+  if auth.uid() is null then
+    raise exception 'not authenticated';
+  end if;
+  delete from public.users where id = auth.uid();
+  delete from auth.users where id = auth.uid();
+end;
+$$;
+
+revoke all on function public.delete_my_account() from public, anon;
+grant execute on function public.delete_my_account() to authenticated;

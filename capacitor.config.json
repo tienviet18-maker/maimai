@@ -5,8 +5,7 @@
   "android": {
     "allowMixedContent": false,
     "backgroundColor": "#fdf2f8",
-    "webContentsDebuggingEnabled": false,
-    "adjustMarginsForEdgeToEdge": "auto"
+    "webContentsDebuggingEnabled": false
   },
   "server": {
     "androidScheme": "https"
@@ -20,6 +19,9 @@
       "overlaysWebView": false,
       "style": "LIGHT",
       "backgroundColor": "#fdf2f8"
+    },
+    "SystemBars": {
+      "insetsHandling": "native"
     }
   }
 }

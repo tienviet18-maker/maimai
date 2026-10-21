@@ -45,6 +45,15 @@
 
   function pad2(n) { return String(n).padStart(2, '0'); }
 
+  // Same zone rule as index.html getLocalDateStr: device zone, Asia/Tokyo only as fallback.
+  function deviceTimeZone() {
+    try {
+      var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (tz) { new Intl.DateTimeFormat('en-CA', { timeZone: tz }); return tz; }
+    } catch (e) {}
+    return 'Asia/Tokyo';
+  }
+
   function defaultDateHelpers() {
     return {
       getLocalDateStr: function (d) {
@@ -52,7 +61,7 @@
         if (isNaN(date.getTime())) return null;
         try {
           var raw = new Intl.DateTimeFormat('en-CA', {
-            timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit', day: '2-digit'
+            timeZone: deviceTimeZone(), year: 'numeric', month: '2-digit', day: '2-digit'
           }).format(date);
           var m = String(raw).match(/(\d{4})\D(\d{1,2})\D(\d{1,2})/);
           if (m) return m[1] + '-' + pad2(+m[2]) + '-' + pad2(+m[3]);

@@ -9,7 +9,7 @@ const vm = require('vm');
 
 const root = path.join(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'www', 'index.html'), 'utf8');
-const webHtml = fs.readFileSync(path.join('C:', 'Users', 'tienv', 'OneDrive', 'Desktop', 'MAIMAI_WEB_NETLIFY', 'index.html'), 'utf8');
+const webHtml = fs.readFileSync(path.join(require('./web_root').webRoot(), 'index.html'), 'utf8');
 
 let passed = 0;
 let failed = 0;

@@ -8,7 +8,7 @@ const path = require('path');
 const crypto = require('crypto');
 
 const ROOT = path.join(__dirname, '..');
-const WEB = path.join('C:', 'Users', 'tienv', 'OneDrive', 'Desktop', 'MAIMAI_WEB_NETLIFY');
+const WEB = require('./web_root').webRoot();
 const eng = require(path.join(ROOT, 'www', 'energy_engine.js'));
 
 let passed = 0;

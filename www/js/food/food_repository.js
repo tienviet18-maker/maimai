@@ -23,14 +23,15 @@
     return String(s || '')
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[đĐ]/g, 'd')
       .toLowerCase();
   }
 
   function displayName(food, lang) {
     if (!food) return '';
-    if (lang === 'ja') return food.nameJa || food.nameEn || food.nameVi || '';
-    if (lang === 'en') return food.nameEn || food.nameVi || food.nameJa || '';
-    return food.nameVi || food.nameEn || food.nameJa || '';
+    if (lang === 'ja') return food.nameJa || food.nameEn || food.nameVi || food.name || '';
+    if (lang === 'en') return food.nameEn || food.nameVi || food.nameJa || food.name || '';
+    return food.nameVi || food.nameEn || food.nameJa || food.name || '';
   }
 
   function prepLabel(food, lang) {
@@ -44,6 +45,12 @@
   function subtitle(food, lang) {
     if (!food) return '';
     var parts = [];
+    var serving = food.servings && food.servings[0];
+    if (food.source === 'MAIMAI_RECIPE' && serving) {
+      parts.push((serving.label && (serving.label[lang] || serving.label.vi)) + ' ' + serving.grams + ' g');
+      parts.push(lang === 'ja' ? '標準レシピから推定' : lang === 'en' ? 'standard recipe estimate' : 'ước tính theo công thức chuẩn');
+      return parts.join(' · ');
+    }
     var prep = prepLabel(food, lang);
     if (prep && food.preparation && food.preparation !== 'unspecified') parts.push(prep);
     if (food.nutritionBasis === 'per_100g') parts.push(lang === 'ja' ? '100gあたり' : lang === 'en' ? 'per 100g' : '/100g');
@@ -61,6 +68,16 @@
     ].concat(food.aliases || []).filter(Boolean).join(' '));
   }
 
+  // Multi-word query matches when every word is present in any order ("trung luoc" → "Trứng gà, nguyên quả, luộc").
+  function allWordsMatch(hay, qNorm) {
+    var words = qNorm.split(/[\s,]+/).filter(Boolean);
+    if (words.length < 2) return false;
+    return words.every(function (w) {
+      var re = new RegExp('(?:^|[^a-z0-9])' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + (w.length <= 3 ? '(?:[^a-z0-9]|$)' : ''));
+      return re.test(hay);
+    });
+  }
+
   function scoreFood(food, qNorm, lang) {
     var nVi = stripAccents(food.nameVi);
     var nEn = stripAccents(food.nameEn);
@@ -70,6 +87,7 @@
     else if (nVi.indexOf(qNorm) === 0 || nEn.indexOf(qNorm) === 0 || nJa.indexOf(qNorm) === 0) score += 70;
     else if ((food.aliases || []).some(function (a) { return stripAccents(a) === qNorm; })) score += 55;
     else if (haystack(food).indexOf(qNorm) >= 0) score += 15;
+    else if (allWordsMatch(haystack(food), qNorm)) score += 12;
     else return -1;
 
     if (food.searchPrimary === false) score -= 80;

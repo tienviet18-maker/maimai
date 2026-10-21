@@ -7,7 +7,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
-const WEB_ROOT = path.join('C:', 'Users', 'tienv', 'OneDrive', 'Desktop', 'MAIMAI_WEB_NETLIFY');
+const WEB_ROOT = require('./web_root').skipUnlessNetlify('web Women Health UI');
 const ANDROID_ROOT = path.join(__dirname, '..');
 const webIndex = path.join(WEB_ROOT, 'index.html');
 const androidIndex = path.join(ANDROID_ROOT, 'www', 'index.html');
