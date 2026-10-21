@@ -1,5 +1,5 @@
 /* MaiMai Service Worker — cache shell + show notifications */
-var CACHE = 'maimai-shell-v2'; // tools/build_web.js stamps a build id here when building dist/
+var CACHE = 'maimai-shell-v3'; // tools/build_web.js stamps a build id here when building dist/
 // App shell + local libraries, so the PWA opens offline. Large data (foods_db.js) is cached on first use.
 var PRECACHE = [
   './',
@@ -19,9 +19,13 @@ var PRECACHE = [
   './js/storage/schema.js',
   './js/storage/data_tools.js',
   './js/cycle/cycle_engine.js',
+  './js/cycle/cycle_food_tips.js',
   './js/food/food_repository.js',
   './js/food/recipe_builder.js',
+  './js/food/portions.js',
+  './js/food/barcode.js',
   './data/foods/foods_ifct.js',
+  './data/foods/foods_vn_recipes.js',
   './js/nutrition/nutrition_bridge.js',
   './js/notifications/notificationEngine.js',
   './js/supabase/supabaseClient.js',

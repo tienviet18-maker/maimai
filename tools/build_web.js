@@ -87,7 +87,7 @@ fs.writeFileSync(indexPath, html, 'utf8');
 const buildId = (process.env.CF_PAGES_COMMIT_SHA || '').slice(0, 12) || hashDir(OUT).slice(0, 12);
 const swPath = path.join(OUT, 'sw.js');
 if (fs.existsSync(swPath)) {
-  const sw = fs.readFileSync(swPath, 'utf8').replace(/var CACHE = 'maimai-shell-v2';/, "var CACHE = 'maimai-shell-" + buildId + "';");
+  const sw = fs.readFileSync(swPath, 'utf8').replace(/var CACHE = 'maimai-shell-[^']*';/, "var CACHE = 'maimai-shell-" + buildId + "';");
   fs.writeFileSync(swPath, sw, 'utf8');
 }
 

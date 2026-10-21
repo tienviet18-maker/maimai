@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-20T16:01:02.151Z",
+  "generatedAt": "2026-10-21T03:56:10.439Z",
   "totalVerified": 10441,
   "searchPrimary": 10376,
   "demotedDuplicates": 65,
@@ -60,5 +60,5 @@
     "braised": 321,
     "scrambled": 3
   },
-  "foodsJsonSha256": "0aeda2bbe0d59f2e3697a8bf0efa7972f5e6b38a9637ed90f573fc9486e7ddf0"
+  "foodsJsonSha256": "c048e63fdf3e588948daab85e49debc89b216e3e35daec4a9639a25d34f06765"
 }

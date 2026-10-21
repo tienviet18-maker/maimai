@@ -22,13 +22,17 @@
     <script src="vendor/chart.umd.min.js"></script>
     <script src="data/foods/foods_db.js"></script>
     <script src="data/foods/foods_ifct.js"></script>
+    <script src="data/foods/foods_vn_recipes.js"></script>
     <script src="energy_engine.js"></script>
     <script src="js/core/architecture.js"></script>
     <script src="js/storage/schema.js"></script>
     <script src="js/storage/data_tools.js"></script>
     <script src="js/cycle/cycle_engine.js"></script>
+    <script src="js/cycle/cycle_food_tips.js"></script>
     <script src="js/food/food_repository.js"></script>
     <script src="js/food/recipe_builder.js"></script>
+    <script src="js/food/portions.js"></script>
+    <script src="js/food/barcode.js"></script>
     <script src="js/nutrition/nutrition_bridge.js"></script>
     <script src="js/notifications/notificationEngine.js"></script>
     <script src="vendor/supabase.js"></script>
@@ -307,6 +311,32 @@
         </div>
     </div>
 
+    <!-- BARCODE MODAL -->
+    <div id="barcode-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[105] flex items-end sm:items-center justify-center p-0 sm:p-4" onclick="if (event.target === this) closeBarcodeModal()">
+        <div class="bg-white rounded-t-[2rem] sm:rounded-[2rem] p-6 w-full max-w-sm shadow-2xl space-y-3">
+            <div class="flex justify-between items-center">
+                <h3 class="text-base font-bold text-gray-800" data-i18n="barcodeTitle">Quét mã vạch</h3>
+                <button type="button" onclick="closeBarcodeModal()" class="text-gray-400 hover:text-gray-600 font-bold px-2 py-1">✕</button>
+            </div>
+            <p class="text-[11px] text-gray-500 leading-relaxed" data-i18n="barcodeHint">Nhập hoặc quét mã vạch trên bao bì.</p>
+            <div id="barcode-camera-box" class="hidden rounded-2xl overflow-hidden bg-black aspect-video">
+                <video id="barcode-video" class="w-full h-full object-cover" playsinline muted></video>
+            </div>
+            <button type="button" id="btn-barcode-camera" onclick="startBarcodeCamera()" class="hidden w-full py-2 rounded-xl border border-pink-200 text-pink-600 text-xs font-bold active:scale-95 transition" data-i18n="barcodeScanBtn">📷 Quét bằng camera</button>
+            <div class="flex gap-2">
+                <input type="text" id="barcode-input" inputmode="numeric" autocomplete="off" maxlength="18" class="flex-1 bg-pink-50 border border-pink-200 text-sm rounded-xl px-3 py-2.5 focus:outline-none" placeholder="8934563138165" onkeydown="if(event.key==='Enter'){lookupBarcode();}">
+                <button type="button" onclick="lookupBarcode()" class="px-4 bg-pink-500 text-white text-xs font-bold rounded-xl active:scale-95 transition" data-i18n="barcodeLookupBtn">Tra cứu</button>
+            </div>
+            <p id="barcode-status" class="text-[11px] text-gray-500 min-h-[1rem]"></p>
+            <div id="barcode-result" class="hidden bg-pink-50/70 border border-pink-100 rounded-2xl p-3 space-y-2">
+                <p id="barcode-result-name" class="text-sm font-bold text-gray-800"></p>
+                <p id="barcode-result-nutr" class="text-[11px] text-gray-600"></p>
+                <button type="button" onclick="useBarcodeFood()" class="w-full py-2 bg-pink-500 text-white text-xs font-bold rounded-xl active:scale-95 transition" data-i18n="barcodeUseBtn">Dùng món này</button>
+            </div>
+            <p class="text-[9px] text-gray-400" data-i18n="barcodeAttribution">Dữ liệu từ Open Food Facts (ODbL). Chỉ số mã vạch được gửi đi.</p>
+        </div>
+    </div>
+
     <!-- WATER MODAL -->
     <div id="water-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4" onclick="handleBackdropClick(event, 'water-modal')">
         <div class="bg-white rounded-t-[2rem] sm:rounded-[2rem] p-6 w-full max-w-sm shadow-2xl space-y-4">
@@ -533,9 +563,19 @@
 
                 <!-- SUB-VIEW 1: SEARCH -->
                 <div id="sub-view-search" class="space-y-4">
+                    <div id="cycle-food-tip" class="hidden bg-rose-50/80 p-4 rounded-3xl border border-rose-100 space-y-2">
+                        <div class="flex items-center justify-between gap-2">
+                            <h4 class="font-bold text-rose-700 text-xs" data-i18n="cycleTipTitle">🌸 Gợi ý ăn uống theo chu kỳ</h4>
+                            <span id="cycle-food-tip-badge" class="hidden text-[9px] font-bold text-rose-400 bg-white px-2 py-0.5 rounded-full" data-i18n="cycleTipEstimated">Giai đoạn ước tính</span>
+                        </div>
+                        <p id="cycle-food-tip-text" class="text-[11px] text-gray-600 leading-relaxed"></p>
+                        <div id="cycle-food-tip-foods" class="flex flex-wrap gap-1.5"></div>
+                        <p class="text-[9px] text-gray-400" data-i18n="cycleTipDisclaimer">Thông tin dinh dưỡng chung, không thay thế tư vấn y tế.</p>
+                    </div>
                     <div class="bg-pink-50/90 p-5 rounded-3xl border border-pink-100 space-y-3">
                         <div class="relative">
-                            <input type="text" id="food-search-input" oninput="onSearchFood(this.value)" placeholder="🔍 ức gà, uc ga, 鶏むね, chicken breast..." class="w-full bg-white border border-pink-200 text-sm rounded-2xl pl-4 pr-10 py-3 focus:outline-none focus:border-pink-500 shadow-sm">
+                            <input type="text" id="food-search-input" oninput="onSearchFood(this.value)" placeholder="🔍 ức gà, uc ga, 鶏むね, chicken breast..." class="w-full bg-white border border-pink-200 text-sm rounded-2xl pl-4 pr-12 py-3 focus:outline-none focus:border-pink-500 shadow-sm">
+                            <button type="button" id="btn-open-barcode" onclick="openBarcodeModal()" class="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-xl bg-pink-100 text-pink-600 text-base active:scale-95 transition" data-i18n-title="barcodeTitle" title="Barcode" aria-label="Barcode"><svg viewBox="0 0 24 24" class="w-5 h-5 mx-auto" fill="currentColor" aria-hidden="true"><path d="M3 5h2v14H3zM7 5h1v14H7zM10 5h2v14h-2zM14 5h1v14h-1zM17 5h1v14h-1zM20 5h1v14h-1z"/></svg></button>
                         </div>
                         <div>
                             <p class="text-[10px] font-bold text-pink-400 uppercase mb-1.5" data-i18n="favRecent">⭐ Yêu thích & Gần đây:</p>
@@ -546,7 +586,8 @@
 
                         <div id="selected-food-calculator" class="hidden bg-white p-4 rounded-2xl border border-pink-200 space-y-3 shadow-sm">
                             <div class="flex justify-between items-start">
-                                <div><h4 class="font-bold text-gray-800 text-sm" id="calc-food-name">Tên món</h4><p class="text-[10px] text-gray-400" id="calc-food-source">Source</p></div>
+                                <div><h4 class="font-bold text-gray-800 text-sm" id="calc-food-name">Tên món</h4><p class="text-[10px] text-gray-400" id="calc-food-source">Source</p>
+                                    <details id="calc-recipe-details" class="hidden mt-1"><summary class="text-[10px] font-bold text-pink-500 cursor-pointer" data-i18n="recipeShowIngredients">Xem nguyên liệu</summary><ul id="calc-recipe-list" class="mt-1 text-[10px] text-gray-500 space-y-0.5"></ul></details></div>
                                 <button onclick="toggleFavoriteCurrent()" id="btn-calc-fav" class="text-sm px-1">🤍</button>
                             </div>
                             <div class="bg-gray-50 p-2.5 rounded-xl text-[10px] text-gray-600 grid grid-cols-5 gap-1 text-center font-medium">
@@ -555,6 +596,11 @@
                                 <div><span class="text-gray-400 block" data-i18n="fat">F</span><b id="ref-fat">--</b></div>
                                 <div><span class="text-gray-400 block" data-i18n="carb">C</span><b id="ref-carb">--</b></div>
                                 <div><span class="text-gray-400 block" data-i18n="sodium">Na</span><b id="ref-sodium">--</b></div>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold text-pink-500 uppercase mb-1" data-i18n="portionLabel">Khẩu phần</p>
+                                <div id="calc-portion-chips" class="flex flex-wrap gap-1.5"></div>
+                                <p class="text-[9px] text-gray-400 mt-1" data-i18n="portionNote">Khẩu phần là ước lượng, bạn sửa được số gram.</p>
                             </div>
                             <div class="flex gap-2 items-center pt-1">
                                 <div class="w-1/2">
@@ -1130,6 +1176,32 @@
                 recipeNeedName: "Hãy đặt tên món và thêm ít nhất 1 nguyên liệu có số calo.",
                 recipeSaved: "Đã lưu \"{name}\" vào Món của tôi.",
                 recipeSourceLine: "Tính từ {n} nguyên liệu theo công thức của bạn",
+                recipeStdSourceLine: "Ước tính theo công thức chuẩn · {n} nguyên liệu",
+                recipeShowIngredients: "Xem nguyên liệu",
+                portionLabel: "Khẩu phần",
+                portionNote: "Khẩu phần là ước lượng, bạn sửa được số gram.",
+                barcodeTitle: "Quét mã vạch",
+                barcodeHint: "Nhập hoặc quét mã vạch trên bao bì (EAN/UPC). Số liệu lấy theo nhãn dinh dưỡng của nhà sản xuất trên 100 g.",
+                barcodeScanBtn: "📷 Quét bằng camera",
+                barcodeLookupBtn: "Tra cứu",
+                barcodeUseBtn: "Dùng món này",
+                barcodeNoCamera: "Thiết bị này chưa hỗ trợ quét bằng camera, bạn hãy nhập dãy số dưới mã vạch.",
+                barcodePointCamera: "Đưa mã vạch vào khung hình…",
+                barcodeLooking: "Đang tra cứu…",
+                barcodeInvalid: "Mã vạch không hợp lệ. Kiểm tra lại dãy 8, 12 hoặc 13 chữ số.",
+                barcodeNotFound: "Chưa có sản phẩm này trên Open Food Facts. Bạn có thể tự nhập ở mục Tự nhập món.",
+                barcodeNoNutrition: "Sản phẩm chưa có thông tin dinh dưỡng trên 100 g, MaiMai không tự đoán số liệu.",
+                barcodeOffline: "Không kết nối được. Kiểm tra mạng rồi thử lại.",
+                barcodePer100: "Trên 100 g: {kcal} kcal · Đạm {p} g · Béo {f} g · Carb {c} g",
+                barcodeServing: "1 phần:",
+                barcodeAttribution: "Dữ liệu từ Open Food Facts (ODbL). Chỉ dãy số mã vạch được gửi đi.",
+                cycleTipTitle: "🌸 Gợi ý ăn uống theo chu kỳ",
+                cycleTipEstimated: "Giai đoạn ước tính",
+                cycleTipDisclaimer: "Thông tin dinh dưỡng chung, không thay thế tư vấn y tế.",
+                cycleTipMenstrual: "Đang trong kỳ kinh: ưu tiên thực phẩm giàu sắt như gan, thịt bò, nghêu, rau dền, ăn kèm trái cây giàu vitamin C như ổi để hấp thu sắt tốt hơn. Nhớ uống đủ nước.",
+                cycleTipFollicular: "Sau kỳ kinh: giữ bữa ăn cân bằng với đạm từ trứng, cá và tinh bột nguyên hạt như gạo lứt.",
+                cycleTipFertile: "Giữa chu kỳ: rau lá xanh và các loại đậu cung cấp folate và chất xơ.",
+                cycleTipLuteal: "Trước kỳ kinh: nếu hay đầy hơi, bớt muối và cà phê; chọn món giàu chất xơ và magie như khoai lang, các loại hạt, chuối.",
                 searchCreateRecipe: "➕ Tạo \"{q}\" từ nguyên liệu",
                 deleteMyFoodConfirm: "Xóa \"{name}\" khỏi Món của tôi? Các bữa đã ghi vẫn giữ nguyên.",
                 reportFoodIssue: "⚠️ Báo sai số liệu",
@@ -1313,6 +1385,32 @@
                 recipeNeedName: "料理名を入力し、カロリーのある材料を1つ以上追加してください。",
                 recipeSaved: "「{name}」をマイフードに保存しました。",
                 recipeSourceLine: "あなたのレシピ（材料{n}品）から計算",
+                recipeStdSourceLine: "標準レシピから推定・材料{n}品",
+                recipeShowIngredients: "材料を見る",
+                portionLabel: "量の目安",
+                portionNote: "目安量です。グラムは自由に変更できます。",
+                barcodeTitle: "バーコード",
+                barcodeHint: "パッケージのバーコード（JAN/EAN/UPC）を入力またはスキャン。数値はメーカー表示の100gあたりの栄養成分です。",
+                barcodeScanBtn: "📷 カメラでスキャン",
+                barcodeLookupBtn: "検索",
+                barcodeUseBtn: "この食品を使う",
+                barcodeNoCamera: "この端末はカメラスキャンに未対応です。バーコード下の数字を入力してください。",
+                barcodePointCamera: "バーコードを枠に合わせてください…",
+                barcodeLooking: "検索中…",
+                barcodeInvalid: "バーコードが正しくありません。8・12・13桁の数字を確認してください。",
+                barcodeNotFound: "Open Food Facts に未登録の商品です。「自分で入力」から登録できます。",
+                barcodeNoNutrition: "100gあたりの栄養成分がない商品です。MaiMaiは数値を推測しません。",
+                barcodeOffline: "接続できません。通信を確認して再度お試しください。",
+                barcodePer100: "100gあたり: {kcal} kcal・たんぱく質 {p} g・脂質 {f} g・炭水化物 {c} g",
+                barcodeServing: "1食分:",
+                barcodeAttribution: "データ: Open Food Facts（ODbL）。送信されるのはバーコード番号のみです。",
+                cycleTipTitle: "🌸 周期に合わせた食事のヒント",
+                cycleTipEstimated: "推定フェーズ",
+                cycleTipDisclaimer: "一般的な栄養情報です。医療上の助言に代わるものではありません。",
+                cycleTipMenstrual: "生理中：レバー、牛肉、アサリ、ヒユナなど鉄分の多い食品を、グアバなどビタミンCの多い果物と一緒にとると吸収が高まります。水分も十分に。",
+                cycleTipFollicular: "生理後：卵や魚のたんぱく質と、玄米などの全粒穀物でバランスよく。",
+                cycleTipFertile: "周期の中ごろ：緑の葉野菜や豆類で葉酸と食物繊維を。",
+                cycleTipLuteal: "生理前：むくみやすい時は塩分とカフェインを控えめに。サツマイモ、ナッツ、バナナなど食物繊維とマグネシウムの多い食品を。",
                 searchCreateRecipe: "➕「{q}」を材料から作成",
                 deleteMyFoodConfirm: "「{name}」をマイフードから削除しますか？記録済みの食事はそのまま残ります。",
                 reportFoodIssue: "⚠️ データの誤りを報告",
@@ -1496,6 +1594,32 @@
                 recipeNeedName: "Give the dish a name and add at least one ingredient with calories.",
                 recipeSaved: "Saved \"{name}\" to My Foods.",
                 recipeSourceLine: "Calculated from your recipe ({n} ingredients)",
+                recipeStdSourceLine: "Estimated from a standard recipe · {n} ingredients",
+                recipeShowIngredients: "Show ingredients",
+                portionLabel: "Portion",
+                portionNote: "Portions are estimates; you can edit the grams.",
+                barcodeTitle: "Scan barcode",
+                barcodeHint: "Type or scan the barcode on the pack (EAN/UPC). Values are the maker's nutrition label per 100 g.",
+                barcodeScanBtn: "📷 Scan with camera",
+                barcodeLookupBtn: "Look up",
+                barcodeUseBtn: "Use this food",
+                barcodeNoCamera: "This device can't scan with the camera yet; type the numbers under the barcode.",
+                barcodePointCamera: "Point the camera at the barcode…",
+                barcodeLooking: "Looking up…",
+                barcodeInvalid: "That barcode isn't valid. Check the 8, 12 or 13 digits.",
+                barcodeNotFound: "This product isn't on Open Food Facts yet. You can add it under Custom food.",
+                barcodeNoNutrition: "This product has no nutrition per 100 g; MaiMai won't guess the numbers.",
+                barcodeOffline: "Couldn't connect. Check your connection and try again.",
+                barcodePer100: "Per 100 g: {kcal} kcal · Protein {p} g · Fat {f} g · Carbs {c} g",
+                barcodeServing: "Serving:",
+                barcodeAttribution: "Data from Open Food Facts (ODbL). Only the barcode number is sent.",
+                cycleTipTitle: "🌸 Eating for your cycle",
+                cycleTipEstimated: "Estimated phase",
+                cycleTipDisclaimer: "General nutrition information, not medical advice.",
+                cycleTipMenstrual: "During your period: favour iron-rich foods such as liver, beef, clams and amaranth, with vitamin C fruit like guava to absorb iron better. Drink enough water.",
+                cycleTipFollicular: "After your period: keep meals balanced with protein from eggs and fish and whole grains such as brown rice.",
+                cycleTipFertile: "Mid-cycle: leafy greens and beans give you folate and fibre.",
+                cycleTipLuteal: "Before your period: if you feel bloated, go easy on salt and coffee; choose fibre and magnesium foods such as sweet potato, nuts and bananas.",
                 searchCreateRecipe: "➕ Build \"{q}\" from ingredients",
                 deleteMyFoodConfirm: "Remove \"{name}\" from My Foods? Meals you already logged stay as they are.",
                 reportFoodIssue: "⚠️ Report a data error",
@@ -2258,6 +2382,12 @@
                 },
                 createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), favorite: false
             };
+            if (foodData.barcode) {
+                newFood.source = 'OpenFoodFacts';
+                newFood.barcode = String(foodData.barcode);
+                newFood.brand = foodData.brand || null;
+                newFood.provenance = { source: 'OpenFoodFacts', sourceId: String(foodData.barcode), license: 'ODbL', retrievedAt: new Date().toISOString() };
+            }
             if (foodData.recipe) {
                 newFood.source = 'user_recipe';
                 newFood.provenanceType = 'calculated';
@@ -2577,6 +2707,110 @@
 
         function closePrivacyPolicy() {
             document.getElementById('privacy-modal').classList.add('hidden');
+        }
+
+        // ---------- Barcode lookup (Open Food Facts) ----------
+        let barcodeStream = null;
+        let barcodeScanTimer = null;
+        let barcodeFound = null;
+
+        function setBarcodeStatus(key, vars) {
+            const el = document.getElementById('barcode-status');
+            if (el) el.innerText = key ? i18nText(key, vars) : '';
+        }
+
+        function openBarcodeModal() {
+            barcodeFound = null;
+            document.getElementById('barcode-result').classList.add('hidden');
+            document.getElementById('barcode-input').value = '';
+            setBarcodeStatus('');
+            const camBtn = document.getElementById('btn-barcode-camera');
+            const canCam = !!(window.MaiMaiBarcode && window.MaiMaiBarcode.canScanWithCamera());
+            camBtn.classList.toggle('hidden', !canCam);
+            if (!canCam) setBarcodeStatus('barcodeNoCamera');
+            document.getElementById('barcode-modal').classList.remove('hidden');
+        }
+
+        function stopBarcodeCamera() {
+            if (barcodeScanTimer) { clearTimeout(barcodeScanTimer); barcodeScanTimer = null; }
+            if (barcodeStream) { barcodeStream.getTracks().forEach(t => t.stop()); barcodeStream = null; }
+            const box = document.getElementById('barcode-camera-box');
+            if (box) box.classList.add('hidden');
+        }
+
+        function closeBarcodeModal() {
+            stopBarcodeCamera();
+            document.getElementById('barcode-modal').classList.add('hidden');
+        }
+
+        async function startBarcodeCamera() {
+            if (!window.MaiMaiBarcode || !window.MaiMaiBarcode.canScanWithCamera()) { setBarcodeStatus('barcodeNoCamera'); return; }
+            stopBarcodeCamera();
+            try {
+                const detector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e'] });
+                barcodeStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+                const video = document.getElementById('barcode-video');
+                video.srcObject = barcodeStream;
+                document.getElementById('barcode-camera-box').classList.remove('hidden');
+                await video.play();
+                setBarcodeStatus('barcodePointCamera');
+                const tick = async () => {
+                    if (!barcodeStream) return;
+                    try {
+                        const codes = await detector.detect(video);
+                        const hit = codes.find(c => window.MaiMaiBarcode.isValidBarcode(c.rawValue));
+                        if (hit) {
+                            document.getElementById('barcode-input').value = hit.rawValue;
+                            stopBarcodeCamera();
+                            lookupBarcode();
+                            return;
+                        }
+                    } catch (e) { /* frame not ready */ }
+                    barcodeScanTimer = setTimeout(tick, 250);
+                };
+                tick();
+            } catch (e) {
+                console.warn('[MaiMai] barcode camera', e);
+                stopBarcodeCamera();
+                setBarcodeStatus('barcodeNoCamera');
+            }
+        }
+
+        async function lookupBarcode() {
+            const B = window.MaiMaiBarcode;
+            const raw = document.getElementById('barcode-input').value;
+            const code = B ? B.cleanCode(raw) : '';
+            document.getElementById('barcode-result').classList.add('hidden');
+            barcodeFound = null;
+            if (!B || !B.isValidBarcode(code)) { setBarcodeStatus('barcodeInvalid'); return; }
+            const saved = (appData.myFoods || []).find(f => f.barcode === code);
+            if (saved) { closeBarcodeModal(); switchSubDietTab('search'); selectFoodItem(saved.id, 'user'); return; }
+            setBarcodeStatus('barcodeLooking');
+            const res = await B.lookup(code, { lang: currentLang });
+            if (!res.ok) {
+                setBarcodeStatus(res.reason === 'not_found' ? 'barcodeNotFound' : res.reason === 'no_nutrition' ? 'barcodeNoNutrition' : 'barcodeOffline');
+                return;
+            }
+            barcodeFound = res.food;
+            setBarcodeStatus('');
+            const f = res.food;
+            const t = I18N[currentLang] || I18N.vi;
+            document.getElementById('barcode-result-name').innerText = f.name + (f.quantity ? ' · ' + f.quantity : '');
+            document.getElementById('barcode-result-nutr').innerText = i18nText('barcodePer100', {
+                kcal: f.energyKcal,
+                p: f.protein == null ? '--' : f.protein,
+                f: f.fat == null ? '--' : f.fat,
+                c: f.carbohydrate == null ? '--' : f.carbohydrate
+            }) + (f.servingLabel ? ' · ' + (t.barcodeServing || '') + ' ' + f.servingLabel : '');
+            document.getElementById('barcode-result').classList.remove('hidden');
+        }
+
+        function useBarcodeFood() {
+            if (!barcodeFound) return;
+            const food = createMyFood(Object.assign({ category: 'Packaged' }, barcodeFound));
+            closeBarcodeModal();
+            switchSubDietTab('search');
+            selectFoodItem(food.id, 'user');
         }
 
         function openAdPrivacyOptions() {
@@ -3024,6 +3258,7 @@
         function setLanguage(lang) {
             currentLang = lang; appData.profile.lang = lang; saveState();
             document.querySelectorAll('[data-i18n]').forEach(el => { const key = el.getAttribute('data-i18n'); if (I18N[lang] && I18N[lang][key] != null) el.innerText = I18N[lang][key]; });
+            document.querySelectorAll('[data-i18n-title]').forEach(el => { const key = el.getAttribute('data-i18n-title'); if (I18N[lang] && I18N[lang][key] != null) { el.title = I18N[lang][key]; el.setAttribute('aria-label', I18N[lang][key]); } });
             if (typeof applyRecipeBuilderI18n === 'function') applyRecipeBuilderI18n();
             ['vi', 'ja', 'en'].forEach(l => { const btn = document.getElementById(`btn-lang-${l}`); if (btn) { if (l === lang) btn.classList.add('active'); else btn.classList.remove('active'); } });
             const headerSelect = document.getElementById('header-lang-select'); if (headerSelect) headerSelect.value = lang;
@@ -3609,8 +3844,12 @@
                     }
                     const displayName = escapeHtml(foodDisplayName(f));
                     const sub = escapeHtml(foodResultSubtitle(f));
-                    const kcal = f.nutritionPer100g && f.nutritionPer100g.energyKcal != null ? f.nutritionPer100g.energyKcal : '--';
-                    resultsBox.innerHTML += `<div onclick="selectFoodItem('${f.id}', 'master')" class="p-3 hover:bg-pink-50 cursor-pointer flex justify-between items-center transition bg-white border-b border-gray-50"><div class="min-w-0 pr-2"><p class="font-bold text-gray-800 text-xs leading-snug">${displayName}</p><p class="text-[9px] text-gray-400 mt-0.5 truncate">${sub}</p></div><div class="text-right shrink-0"><span class="text-xs font-bold text-orange-500">${kcal} kcal</span><span class="text-[9px] text-gray-400 block">/100g</span></div></div>`;
+                    const per100 = f.nutritionPer100g && f.nutritionPer100g.energyKcal != null ? f.nutritionPer100g.energyKcal : null;
+                    // Standard dishes show one serving ("1 tô"), everything else per 100 g
+                    const serving = f.source === 'MAIMAI_RECIPE' && f.servings && f.servings[0];
+                    const kcal = per100 == null ? '--' : serving ? Math.round(per100 * serving.grams / 100) : per100;
+                    const unit = serving ? '/' + escapeHtml((serving.label && (serving.label[currentLang] || serving.label.vi)) || '') : '/100g';
+                    resultsBox.innerHTML += `<div onclick="selectFoodItem('${f.id}', 'master')" class="p-3 hover:bg-pink-50 cursor-pointer flex justify-between items-center transition bg-white border-b border-gray-50"><div class="min-w-0 pr-2"><p class="font-bold text-gray-800 text-xs leading-snug">${displayName}</p><p class="text-[9px] text-gray-400 mt-0.5 truncate">${sub}</p></div><div class="text-right shrink-0"><span class="text-xs font-bold text-orange-500">${kcal} kcal</span><span class="text-[9px] text-gray-400 block">${unit}</span></div></div>`;
                 });
             }
             resultsBox.classList.remove('hidden');
@@ -3626,9 +3865,10 @@
             if (srcEl) {
                 const prep = foodResultSubtitle(food);
                 srcEl.innerText = food.recipe
-                    ? i18nText('recipeSourceLine', { n: food.recipe.ingredients.length })
+                    ? i18nText(food.source === 'MAIMAI_RECIPE' ? 'recipeStdSourceLine' : 'recipeSourceLine', { n: food.recipe.ingredients.length })
                     : (prep || food.source || (type === 'user' ? 'user' : 'master'));
             }
+            renderCalcRecipeDetails(food);
             const n = food.nutritionPer100g || {};
             const setRef = (eid, val) => { const el = document.getElementById(eid); if (el) el.innerText = (val == null ? '--' : val); };
             setRef('ref-energy', n.energyKcal); setRef('ref-protein', n.protein); setRef('ref-fat', n.fat); setRef('ref-carb', n.carbohydrate); setRef('ref-sodium', n.sodium);
@@ -3636,14 +3876,53 @@
             const favBtn = document.getElementById('btn-calc-fav');
             if(favBtn) favBtn.innerText = (appData.favorites && appData.favorites.includes(food.id)) ? '❤️' : '🤍';
 
-            const defGram = food.defaultGrams || 100; // per-100g basis; no hidden 150 g default
+            // The dish's own serving, else the first household portion ("1 quả trứng" 50 g), else 100 g
+            const firstPortion = window.MaiMaiPortions ? window.MaiMaiPortions.getPortions(food, currentLang).find(p => p.kind !== 'grams') : null;
+            const defGram = food.defaultGrams || (firstPortion && firstPortion.grams) || 100;
             document.getElementById('calc-gram-input').value = defGram; onGramChange(defGram);
+        }
+
+        function renderCalcRecipeDetails(food) {
+            const box = document.getElementById('calc-recipe-details');
+            const list = document.getElementById('calc-recipe-list');
+            if (!box || !list) return;
+            const ings = (food.recipe && food.recipe.ingredients) || [];
+            box.classList.toggle('hidden', !ings.length);
+            box.open = false;
+            list.innerHTML = ings.map(it => {
+                const src = FOOD_MASTER.find(f => f.id === it.id);
+                const name = src ? foodDisplayName(src) : (it.name || it.id);
+                return '<li>• ' + escapeHtml(name) + ' — ' + Math.round(it.grams * 10) / 10 + ' g</li>';
+            }).join('');
+        }
+
+        function renderPortionChips(grams) {
+            const box = document.getElementById('calc-portion-chips');
+            if (!box || !currentSelectedFood) return;
+            const P = window.MaiMaiPortions;
+            const portions = P ? P.getPortions(currentSelectedFood.item, currentLang) : [];
+            const g = Number(grams);
+            box.innerHTML = portions.map((p, i) => {
+                const active = Math.abs(p.grams - g) < 0.05;
+                const text = p.kind === 'grams' ? p.label : p.label + ' · ' + p.grams + ' g';
+                return '<button type="button" onclick="applyPortion(' + i + ')" class="px-2.5 py-1 rounded-full text-[10px] font-bold border transition ' +
+                    (active ? 'bg-pink-500 text-white border-pink-500' : 'bg-white text-pink-600 border-pink-200 hover:bg-pink-50') + '">' + escapeHtml(text) + '</button>';
+            }).join('');
+        }
+
+        function applyPortion(i) {
+            if (!currentSelectedFood || !window.MaiMaiPortions) return;
+            const p = window.MaiMaiPortions.getPortions(currentSelectedFood.item, currentLang)[i];
+            if (!p) return;
+            document.getElementById('calc-gram-input').value = p.grams;
+            onGramChange(p.grams);
         }
 
         function onGramChange(grams) {
             if (!currentSelectedFood) return; const res = calculateNutrition(currentSelectedFood.item.nutritionPer100g, grams);
             document.getElementById('calc-result-energy').innerText = res.energyKcal; document.getElementById('calc-result-p').innerText = res.protein ?? '--';
             document.getElementById('calc-result-f').innerText = res.fat ?? '--'; document.getElementById('calc-result-c').innerText = res.carbohydrate ?? '--';
+            renderPortionChips(grams);
         }
 
         function addSelectedFoodToMeal() {
@@ -3680,7 +3959,28 @@
             renderDietView(); renderHealthScreen();
         }
 
+        function renderCycleFoodTip() {
+            const box = document.getElementById('cycle-food-tip');
+            if (!box) return;
+            const eng = getCycleEngine();
+            const T = window.MaiMaiCycleFoodTips;
+            let tip = null;
+            try {
+                const ctx = eng && eng.pickMaiCycleContext ? eng.pickMaiCycleContext(appData, TODAY_STR, getCycleDateDeps()) : null;
+                tip = T ? T.pickCycleFoodTip(ctx, appData.profile) : null;
+            } catch (e) { console.warn('[MaiMai] cycle food tip', e); }
+            box.classList.toggle('hidden', !tip);
+            if (!tip) return;
+            document.getElementById('cycle-food-tip-badge').classList.toggle('hidden', !tip.estimated);
+            document.getElementById('cycle-food-tip-text').innerText = i18nText(tip.textKey);
+            document.getElementById('cycle-food-tip-foods').innerHTML = tip.foods
+                .map(id => FOOD_MASTER.find(f => f.id === id)).filter(Boolean)
+                .map(f => '<button type="button" onclick="selectFoodItem(\'' + f.id + '\', \'master\')" class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white text-rose-600 border border-rose-200 active:scale-95 transition">' +
+                    escapeHtml(String(foodDisplayName(f)).split(',')[0]) + '</button>').join('');
+        }
+
         function renderDietView() {
+            renderCycleFoodTip();
             const dateStr = getLocalDateStr(dietViewDate); const logs = getDailyRecord(dateStr).foodLogs;
             const totals = logs.reduce((acc, l) => {
                 const s = l.nutritionSnapshot || { energyKcal: 0, protein: 0, fat: 0, carbohydrate: 0, fiber: 0, sodium: 0 };
