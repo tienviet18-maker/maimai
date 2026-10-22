@@ -23,5 +23,15 @@
     "SystemBars": {
       "insetsHandling": "native"
     }
+  },
+  "ios": {
+    "includePlugins": [
+      "@capacitor/app",
+      "@capacitor/filesystem",
+      "@capacitor/share",
+      "@capacitor/status-bar"
+    ],
+    "backgroundColor": "#fdf2f8",
+    "contentInset": "never"
   }
 }
