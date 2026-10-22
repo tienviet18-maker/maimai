@@ -451,12 +451,16 @@
     return authPromise;
   }
 
+  var MAX_DISPLAY_NAME_LEN = 100;
+
   async function ensureUserProfile(user, appData) {
     var client = getClient();
     if (!client || !user) return { ok: false, error: 'no_client_or_user' };
     try {
       var display =
         (appData && appData.profile && appData.profile.userName) || null;
+      // Must match users_display_name_len in supabase/migrations (≤ 100 chars).
+      if (display != null) display = Array.from(String(display)).slice(0, MAX_DISPLAY_NAME_LEN).join('') || null;
       var target =
         appData && appData.profile && appData.profile.targetWeight != null
           ? Number(appData.profile.targetWeight)
