@@ -1,0 +1,124 @@
+name: iOS build to TestFlight
+
+# Builds the iOS app (Capacitor, web app in www/) on a macOS runner, signs it with Xcode cloud signing
+# (App Store Connect API key) and uploads it to TestFlight.
+# Run it by hand from the Actions tab once these repository secrets exist:
+#   APPLE_TEAM_ID       10-character Team ID (developer.apple.com → Membership)
+#   ASC_KEY_ID          App Store Connect API key id
+#   ASC_ISSUER_ID       App Store Connect API issuer id
+#   ASC_KEY_P8          contents of the AuthKey_XXXX.p8 file (Admin or App Manager role)
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_number:
+        description: "Build number (must increase for each upload)"
+        required: true
+        default: "1"
+
+permissions:
+  contents: read
+
+jobs:
+  ios:
+    # App Store Connect only accepts builds made with the iOS 26 SDK (Xcode 26+).
+    runs-on: macos-26
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select newest Xcode
+        run: |
+          ls -d /Applications/Xcode*.app
+          XC=$(ls -d /Applications/Xcode_*.app | grep -v -i beta | sort -V | tail -1)
+          sudo xcode-select -s "$XC/Contents/Developer"
+          xcodebuild -version
+          case "$(xcodebuild -version | head -1)" in
+            "Xcode 2"[6-9]*|"Xcode "[3-9]*) ;;
+            *) echo "::error::Need Xcode 26 or later for App Store uploads"; exit 1 ;;
+          esac
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Check secrets
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          for v in APPLE_TEAM_ID ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8; do
+            if [ -z "${!v}" ]; then echo "::error::Missing secret $v"; exit 1; fi
+          done
+
+      - name: Write API key
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/keys"
+          # Accept the .p8 pasted as-is, flattened onto one line, or base64-encoded.
+          python3 - "$RUNNER_TEMP/keys/AuthKey_${ASC_KEY_ID}.p8" <<'PY'
+          import base64, os, re, sys
+          raw = os.environ["ASC_KEY_P8"].replace("\r", "").strip()
+          if "BEGIN" not in raw:
+              try:
+                  raw = base64.b64decode(re.sub(r"\s+", "", raw)).decode().strip()
+              except Exception:
+                  pass
+          m = re.search(r"-----BEGIN PRIVATE KEY-----(.*?)-----END PRIVATE KEY-----", raw, re.S)
+          if not m:
+              print("::error::ASC_KEY_P8 is not the AuthKey .p8 text (no BEGIN/END PRIVATE KEY lines found)")
+              sys.exit(1)
+          body = re.sub(r"\s+", "", m.group(1))
+          lines = [body[i:i + 64] for i in range(0, len(body), 64)]
+          with open(sys.argv[1], "w") as f:
+              f.write("-----BEGIN PRIVATE KEY-----\n" + "\n".join(lines) + "\n-----END PRIVATE KEY-----\n")
+          print(f"Key written ({len(body)} base64 chars)")
+          PY
+
+      - name: Copy web app into the iOS project
+        run: |
+          npm ci
+          npx cap sync ios
+
+      - name: Archive with cloud signing
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            CURRENT_PROJECT_VERSION="${{ inputs.build_number }}" \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" CODE_SIGN_STYLE=Automatic \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/keys/AuthKey_${ASC_KEY_ID}.p8" \
+            -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            archive
+
+      - name: Upload to TestFlight
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>${APPLE_TEAM_ID}</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+          </dict></plist>
+          EOF
+          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" -exportPath "$RUNNER_TEMP/export" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/keys/AuthKey_${ASC_KEY_ID}.p8" \
+            -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID"
