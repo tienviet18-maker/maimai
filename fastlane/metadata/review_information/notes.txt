@@ -1,0 +1,5 @@
+MaiMai is a personal nutrition and wellness diary (calories, water, sleep, weight and an optional menstrual cycle log). No account or login is required: on first launch, fill in the profile form (any name, age, height and weight) and tap the pink save button.
+
+All data is stored only on the device. The iOS app has no ads, no in-app purchases, no analytics and no cloud sync. The only network request is an optional barcode lookup that sends just the barcode number to Open Food Facts. Calorie and cycle figures are estimates for reference only; the app shows a not-medical-advice notice and is not a medical device.
+
+Data export, restore and "Delete all data" are in Profile (gear icon) > Data & Privacy.
