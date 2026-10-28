@@ -16,6 +16,7 @@ var PRECACHE = [
   './energy_engine.js',
   './admob.config.js',
   './js/core/architecture.js',
+  './js/core/in_app_browser_notice.js',
   './js/storage/schema.js',
   './js/storage/data_tools.js',
   './js/cycle/cycle_engine.js',
